@@ -19,7 +19,11 @@ const Item = sequelize.define("Item", {
     type: DataTypes.STRING(500),
   },
   category: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.ENUM(
+      'BOOK', 'CLOTHING', 'SHOES', 'TEXTILE', 'STATIONERY', 
+      'ELECTRONICS', 'TOYS', 'SPORT', 'BEAUTY', 'ART', 'MUSIC', 
+      'FURNITURE', 'JEWELRY', 'HEALTH', 'OTHER'
+    ),
     allowNull: false,
   },
   starting_price: {
@@ -31,6 +35,8 @@ const Item = sequelize.define("Item", {
   },
   image: {
     type: DataTypes.STRING(255),
+    allowNull: true,
+
   },
   condition: {
     type: DataTypes.ENUM("NEW", "LIKE NEW", "GOOD", "ACCEPTABLE", "BAD"),
@@ -51,3 +57,4 @@ const Item = sequelize.define("Item", {
 });
 
 module.exports = Item;
+ 

@@ -1,19 +1,23 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../sequelize");
 
-const Category = sequelize.define("Category", {
+const Follower = sequelize.define("Follower", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  name: {
-    type: DataTypes.STRING(100),
+  follower_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  followed_id: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
 }, {
-  tableName: "categories",
+  tableName: "followers",
   timestamps: false,
 });
 
-module.exports = Category;
+module.exports = Follower;

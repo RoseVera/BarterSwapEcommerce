@@ -1,0 +1,258 @@
+.profile-container {
+  display: flex;
+  background-color: #fff7f3;
+  min-height: 100vh; 
+}
+
+.sidebar {
+  width: 200px;
+  background-color: #c599b6;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 25px;
+
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  border-radius: 20px;
+  padding: 10px;
+  text-align: left;
+  color: white;
+  cursor: pointer;
+  font-size: 20px;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+}
+
+.menu-button.active {
+  font-weight: bold;
+  background-color: #fad0c4;
+  color: black;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
+
+
+/*STATS*/
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.stat-box {
+  background-color: #fad0c4;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+}
+
+
+.filter-panel {
+  width: 200px;
+  border-radius: 20px;
+  background-color: #e6b2ba;
+  padding: 20px;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+}
+
+/*MY ITEMS*/
+.item-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+}
+
+.item-card {
+  position: relative;
+  background-color: #fad0c4;
+  padding: 20px;
+  border-radius: 20px;
+  width: calc(50% - 10px); /* Her satıra 2 item sığsın */
+  box-sizing: border-box;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.item-page {
+  padding: 5px;
+}
+
+.add-item-button {
+  padding: 10px 20px;
+  background-color: #e6b2ba;
+  color: white;
+  border: none;
+  cursor: pointer;
+  height: 50px;
+  font-size: 25px;
+  font-weight: bold;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  border-radius: 20px;
+
+}
+
+.add-item-button:hover {
+  background-color: #fad0c4;
+  color: black;
+
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* <--- BURAYA EKLE */
+
+}
+
+.modal-content {
+  background-color: #FFF7F3;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-input {
+  display: block;
+  width: 90%;
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid #C599B6;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.modal-button {
+  background-color: #C599B6;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-button:hover {
+  background-color: #E6B2BA;
+}
+.filter-buttons{
+  padding: 10px 20px;
+  background-color: #e6b2ba;
+  color: white;
+  border: none;
+  cursor: pointer;
+  height: 30px;
+  font-size: 15px;
+  font-weight: bold;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  border-radius: 10px;
+
+}
+
+.filter-buttons:hover{
+  background-color: #fad0c4;
+  color: black;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+
+/*DM*/
+.dm-container {
+  display: flex;
+
+}
+
+.chat-list {
+  width: 200px;
+  background-color: #e6b2ba;
+  padding: 20px;
+  border-radius: 20px;
+
+
+}
+
+.chat-user {
+  padding: 10px;
+  background-color: #fad0c4;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 20px;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+}
+
+.chat-window {
+  flex: 1;
+  background-color: #fad0c4;
+  border-radius: 40px;
+  padding: 20px;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+}
+
+
+/*FOLLLOWED*/
+.followed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+}
+
+.followed-user {
+  background-color: #fad0c4;
+  border-radius: 20px;
+  padding: 15px;
+}
+
+
+/*PROFILE FORM*/
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.profile-form button {
+  background-color: #fad0c4;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.profile-form button:hover {
+  background-color: #E6B2BA;
+}
+
+@media (max-width: 600px) {
+  .item-card {
+    width: 100%;
+  }
+}

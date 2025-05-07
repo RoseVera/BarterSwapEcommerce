@@ -1,0 +1,72 @@
+.header {
+    background-color: #C599B6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0px;
+    padding: 10px 20px;
+    z-index: 2;
+
+  }
+  
+  .logo {
+    height:150px;
+  }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Elemanlar arasında boşluk */
+  }
+  
+  .welcome-message {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 17px;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+  }
+  
+  .profile-icon {
+    background-color: #FAD0C4;
+    border: none;
+    width: 32px;
+    height: 32px;
+    padding: 8px 12px;
+    margin-left: 10px;
+    cursor: pointer;
+    border-radius: 25px;
+    cursor: pointer;
+  }
+  .header-button {
+    background-color: #FAD0C4;
+    border: none;
+    height:50px;
+    width: 80px;
+    padding: 8px 12px;
+    margin-left: 10px;
+    cursor: pointer;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 17px;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+
+  }
+  .awning-row {
+    display: flex;
+    width: 100%;
+    background-color: #FFF7F3;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .awning-image {
+    background-color: #FFF7F3;
+    width: 12%;
+    height: 70px; /* istediğin kadar düşürebilirsin */
+    display: block;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    top: -0px; /* çok az boşluk varsa sıfıra veya -5'e çek */
+    z-index: 1;
+  }
+  
