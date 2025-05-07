@@ -1,19 +1,16 @@
 const User = require("./User");
-const Category = require("./Category");
 const Item = require("./Item");
 const Bid = require("./Bid");
 const Transaction = require("./Transaction");
 const Review = require("./Review");
 const Bonus = require("./Bonus");
 const DirectMessage = require("./DirectMessage");
+const Follower = require("./Follower");
+const Conversation = require("./Conversation");
 
 // USER - ITEM (1:N)
 User.hasMany(Item, { foreignKey: "user_id" });
 Item.belongsTo(User, { foreignKey: "user_id" });
-
-// CATEGORY - ITEM (1:N)
-Category.hasMany(Item, { foreignKey: "category" });
-Item.belongsTo(Category, { foreignKey: "category" });
 
 // USER - BID (1:N)
 User.hasMany(Bid, { foreignKey: "user_id" });
@@ -51,13 +48,37 @@ DirectMessage.belongsTo(User, { foreignKey: "sender_id", as: "Sender" });
 User.hasMany(DirectMessage, { foreignKey: "receiver_id", as: "ReceivedMessages" });
 DirectMessage.belongsTo(User, { foreignKey: "receiver_id", as: "Receiver" });
 
+// USER - FOLLOWERS (M:N with self-reference)
+User.belongsToMany(User, {
+  through: Follower,
+  as: "Followers",           
+  foreignKey: "followed_id",
+  otherKey: "follower_id"
+});
+
+User.belongsToMany(User, {
+  through: Follower,
+  as: "Following",           
+  foreignKey: "follower_id",
+  otherKey: "followed_id"
+});
+
+// USER - CONVERSATION (1:N) as Participant One
+User.hasMany(Conversation, { foreignKey: "participant_one_id", as: "ConversationsStarted" });
+Conversation.belongsTo(User, { foreignKey: "participant_one_id", as: "ParticipantOne" });
+
+// USER - CONVERSATION (1:N) as Participant Two
+User.hasMany(Conversation, { foreignKey: "participant_two_id", as: "ConversationsReceived" });
+Conversation.belongsTo(User, { foreignKey: "participant_two_id", as: "ParticipantTwo" });
+
 module.exports = {
   User,
-  Category,
   Item,
   Bid,
   Transaction,
   Review,
   Bonus,
-  DirectMessage
+  DirectMessage,
+  Follower,
+  Conversation
 };
