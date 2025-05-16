@@ -4,7 +4,7 @@ import Stats from "./profile_sections/Stats";
 import MyItems from "./profile_sections/MyItems";
 import PurchaseHistory from "./profile_sections/PurchaseHistory";
 import DM from "./profile_sections/DM";
-import Followed from "./profile_sections/Followed";
+import Following from "./profile_sections/Following";
 import UserProfile from "./profile_sections/UserProfile";
 
 const sections = {
@@ -12,7 +12,7 @@ const sections = {
   "My Items": <MyItems />,
   "Purchase History": <PurchaseHistory />,
   DM: <DM />,
-  Followed: <Followed />,
+  Following: <Following />,
   Profile: <UserProfile />,
 };
 

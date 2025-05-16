@@ -1,0 +1,37 @@
+.followed-list {
+    padding: 20px;
+    max-width: 500px;
+    margin: auto;
+    background: #fff7f3;
+    border-radius: 12px;
+  }
+  
+  .followed-count {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .followed-user {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #fad0c4;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .followed-name {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .unfollow-button {
+    background-color: #c599b6;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }

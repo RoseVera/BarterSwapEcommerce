@@ -16,7 +16,7 @@ function Register() {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/register", form);
       alert("Registered successfully");
-      navigate("/login");
+      //navigate("/login");
     } catch (err) {
       alert(err.response?.data?.message || "Register failed");
     }

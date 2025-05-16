@@ -59,7 +59,7 @@ router.post("/login", async (req, res) => {
 
     res
       .cookie("token", token, { httpOnly: true, secure: false, sameSite: "Lax" })
-      .json({ message: "Login successful", user: { id: user.id, name: user.name, role: user.role } });
+      .json({ message: "Login successful", user: { id: user.id, name: user.name, role: user.role ,balance:user.balance,student_id:user.student_id,phone:user.phone} });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -83,7 +83,7 @@ router.get("/me", async (req, res) => {
     const user = await User.findByPk(decoded.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json({ user: { id: user.id, name: user.name, role: user.role } });
+    res.json({ user: { id: user.id, name: user.name, role: user.role, balance:user.balance,student_id:user.student_id,phone:user.phone } });
   } catch (err) {
     res.status(401).json({ message: "Invalid token" });
   }

@@ -63,6 +63,9 @@ User.belongsToMany(User, {
   otherKey: "followed_id"
 });
 
+// FOLLOWER -> FOLLOWED USER (N:1)
+Follower.belongsTo(User, { foreignKey: 'followed_id', as: 'followed' });
+
 // USER - CONVERSATION (1:N) as Participant One
 User.hasMany(Conversation, { foreignKey: "participant_one_id", as: "ConversationsStarted" });
 Conversation.belongsTo(User, { foreignKey: "participant_one_id", as: "ParticipantOne" });
