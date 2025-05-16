@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import useUserStore from '../src/components/UserStore';
 import ItemDetail from './pages/ItemDetail';
+import User from './pages/UserPage';
 
 
 
@@ -22,6 +23,7 @@ function App() {
       try {
         const res = await axios.get("http://localhost:5000/api/auth/me", { withCredentials: true });
         setUser(res.data.user);
+        console.log(res.data.user)
       } catch (err) {
         // Do nothing
       } finally {
@@ -41,6 +43,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/item/:id" element={<ItemDetail />} /> 
+          <Route path="/user/:id" element={<User />} /> 
           <Route
             path="/profile"
             element={

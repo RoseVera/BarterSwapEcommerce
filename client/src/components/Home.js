@@ -6,7 +6,7 @@ import noImage from '../assets/no_image.png';
 import coin from '../assets/coin.png';
 
 function Home() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
@@ -16,7 +16,7 @@ function Home() {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/latest-items")
+    fetch("http://localhost:5000/api/items/latest-items")
       .then(res => res.json())
       .then(data => setItems(data))
       .catch(err => console.error("Fetch error:", err));
@@ -29,7 +29,7 @@ function Home() {
       ...appliedFilters
     });
 
-    fetch(`http://localhost:5000/api/filtered-items?${queryParams}`)
+    fetch(`http://localhost:5000/api/items/filtered-items?${queryParams}`)
       .then(res => res.json())
       .then(data => {
         setItems(data.items);
@@ -119,7 +119,7 @@ function Home() {
           <button className="show-button" onClick={handleShowResults}>
             Show Results
           </button>
-          <button className="show-button"onClick={() => window.location.reload()}>
+          <button className="show-button" onClick={() => window.location.reload()}>
             Clean Filters
           </button>
         </div>
@@ -128,7 +128,7 @@ function Home() {
         <div className="item-grid">
           {Array.isArray(items) && items.map(item => (
             <div key={item.id} className="item-card" onClick={() => navigate(`/item/${item.id}`)} style={{ cursor: 'pointer' }}>
-            {item.is_bid && (
+              {item.is_bid && (
                 <img src={auctionIcon} alt="Auction" className="auction-icon" />
               )}
               <img
@@ -148,15 +148,17 @@ function Home() {
                     />
                     {item.starting_price}
                   </p>
-                  <p>
-                    Current:{" "}
-                    <img
-                      src={coin}
-                      alt="coin"
-                      style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
-                    />
-                    {item.current_price}
-                  </p>
+                  {item.current_price !== null && (
+                    <p>
+                      Current:{" "}
+                      <img
+                        src={coin}
+                        alt="coin"
+                        style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
+                      />
+                      {item.current_price}
+                    </p>
+                  )}
                 </>
               ) : (
                 <p>

@@ -1,0 +1,101 @@
+
+  .user-profile-container {
+    background-color: #FFF7F3;
+    padding: 20px;
+  }
+  .user-item-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+  }
+  .user-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .user-name {
+    font-size: 1.75rem;
+    color: #FFF7F3;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    background-color: #C599B6;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20rem;
+    font-weight: bold;
+  }
+  
+  .user-reputation {
+    color: #555;
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+  
+  .follow-button {
+    background-color: #C599B6;
+    color: #FFF7F3;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    transition: background-color 0.3s ease;
+    border: none;
+  }
+  
+  .follow-button:hover {
+    background-color: #A26D92;
+    cursor: pointer;
+  }
+
+  .dm-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .dm-icon {
+    width: 35px;
+    height: 35px;
+  }
+  
+  /* Tab butonları */
+  .tab-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tab-button {
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    background-color: #eee;
+    color: #333;
+    border: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+  }
+  
+  .tab-button:hover {
+    background-color: #ddd;
+  }
+  
+  .active-tab {
+    background-color: #C599B6;
+    color: white;
+  }
+  
+  .active-tab:hover {
+    background-color: #A26D92;
+  }  
+  .star-icon {
+    width: 30px;
+    vertical-align: middle;
+    margin-right: 5px;
+    margin-bottom: 4px;
+  }
+  

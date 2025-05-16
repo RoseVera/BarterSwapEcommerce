@@ -17,7 +17,8 @@ const Follower = sequelize.define("Follower", {
   },
 }, {
   tableName: "followers",
-  timestamps: false,
+  timestamps: true,      
+  updatedAt: false 
 });
 
 module.exports = Follower;

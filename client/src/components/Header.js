@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../style/Header.css';
-import logo from '../assets/logov3.png';
+import logo from '../assets/logov4.png';
 import profileIcon from '../assets/user.png';
 import awningIcon from '../assets/awning3.png';
+import coin from '../assets/coin.png';
 
 
 import useUserStore from '../components/UserStore';
@@ -30,8 +31,6 @@ function Header() {
 
   return (
     <>
-
-
       <header className="header">
         <div className="header-left">
           <img src={logo} alt="Logo" className="logo" onClick={handleLogoClick} />
@@ -39,6 +38,13 @@ function Header() {
         <div className="header-right">
           {user ? (
             <div className="user-info">
+              
+              <img
+                src={coin}
+                alt="coin"
+                style={{ width: "20px", verticalAlign: "middle", marginRight: "-8px", marginBottom: "1px" }}
+              />
+               <span className="welcome-message"> {user.balance}</span>
               <span className="welcome-message"> {user.name}</span>
               <img
                 src={profileIcon}

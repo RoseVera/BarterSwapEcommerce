@@ -3,8 +3,13 @@ const app = express();
 const cors = require("cors");
 const pool = require("./db");
 const sequelize = require("./sequelize");
+
 const authRoutes = require("./routes/auth");
 const itemRoutes = require("./routes/item");
+const bidRoutes = require("./routes/bid");
+const userRoutes = require("./routes/user");
+const followerRoutes = require("./routes/follower");
+
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
@@ -19,8 +24,10 @@ app.use(bodyParser.json());
 
 //ROUTES
 app.use("/api/auth", authRoutes);
-app.use("/api", itemRoutes);
-
+app.use("/api/items", itemRoutes);
+app.use("/api/bids", bidRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/followers", followerRoutes);
 require("./models/Associations");
 require("dotenv").config();
 

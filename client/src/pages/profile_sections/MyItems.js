@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useUserStore from "../../components/UserStore";
 import axios from "axios";
 import auctionIcon from "../../assets/auction.png"; // ikon yolunu doğru ver
+import coin from '../../assets/coin.png';
 
 function MyItems() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +62,7 @@ function MyItems() {
         }
 
         const response = await axios.get(url);
-        
+
         setItems(response.data);
         setCurrentPage(1); // filtre değiştiğinde 1. sayfaya dön
       } catch (err) {
@@ -153,6 +154,21 @@ function MyItems() {
     }
   };
 
+  //Sell Item
+  const handleSell = async (itemId) => {
+    try {
+      const response = await axios.post(`http://localhost:5000/api/bids/sell/${itemId}`);
+      alert(response.data.message);
+
+      // Satış sonrası listeyi yenile
+      const refreshed = await axios.get(`http://localhost:5000/api/items?user_id=${user.id}`);
+      setItems(refreshed.data);
+    } catch (err) {
+      alert(err.response?.data?.error || "Error processing sale");
+    }
+  };
+
+
   const paginatedItems = items.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -161,6 +177,8 @@ function MyItems() {
 
   return (
     <div className="item-page">
+
+      {/*ADD ITEM */}
       <div className="left-panel">
         <button className="add-item-button" onClick={cleanForm}>
           + Add Item
@@ -204,19 +222,57 @@ function MyItems() {
 
               {item.is_bid ? (
                 <>
-                  {item.current_price > item.starting_price && (
+                  {item.current_price && (
                     <>
-                      <p>Current Price: ${item.current_price}</p>
-                      <button className="modal-button">Sell</button>
+                      <p>
+                        Starting:{" "}
+                        <img
+                          src={coin}
+                          alt="coin"
+                          style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
+                        />
+                        {item.starting_price}
+                      </p>
+                      <p>
+                        Current:{" "}
+                        <img
+                          src={coin}
+                          alt="coin"
+                          style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
+                        />
+                        {item.current_price}
+                      </p>
+                      <button
+                        className="modal-button"
+                        onClick={() => handleSell(item.id)}
+                      >
+                        Sell
+                      </button>
                     </>
                   )}
-                  {item.current_price <= item.starting_price && (
-                    <p>Starting Price: ${item.starting_price}</p>
+                  {!item.current_price && (
+                    <p>
+                      Starting:{" "}
+                      <img
+                        src={coin}
+                        alt="coin"
+                        style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
+                      />
+                      {item.starting_price}
+                    </p>
                   )}
                 </>
               ) : (
                 <>
-                  <p>Price: ${item.starting_price}</p>
+                  <p>
+                        Price:{" "}
+                        <img
+                          src={coin}
+                          alt="coin"
+                          style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
+                        />
+                        {item.starting_price}
+                      </p>
 
                 </>
               )}
@@ -225,6 +281,7 @@ function MyItems() {
         )}
       </div>
 
+      {/*PAGING */}
       {totalPages > 1 && (
         <div className="pagination">
           <button
@@ -492,13 +549,13 @@ function MyItems() {
               <button className="modal-button" type="submit">Update</button>
             </form>
             <button
-            
-                onClick={() => handleDelete()}
-                className="modal-button"
-                style={{ backgroundColor: "red" }}
-              >
-                Delete
-              </button>
+
+              onClick={() => handleDelete()}
+              className="modal-button"
+              style={{ backgroundColor: "red" }}
+            >
+              Delete
+            </button>
           </div>
         </div>
       )}
