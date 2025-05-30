@@ -49,7 +49,7 @@ function Home() {
 
   return (
     <div className="home-container">
-      <input className="search-bar" placeholder="Search items..." disabled />
+      <input className="search-bar" placeholder="Search Users..."  />
       <div className="content-wrapper">
 
         <div className="filter-menu">
@@ -188,7 +188,9 @@ function Home() {
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
-              key={page}
+            
+
+            
               onClick={() => handlePageChange(page)}
               className={page === currentPage ? "active-page" : ""}
             >

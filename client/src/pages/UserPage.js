@@ -8,6 +8,8 @@ import auctionIcon from '../assets/auction.png';
 import noImage from '../assets/no_image.png';
 import coin from '../assets/coin.png';
 import star from '../assets/star.png';
+import whiteStar from '../assets/whiteStar.png';
+import yellowStar from '../assets/yellowStar.png';
 import followers from '../assets/followers.png';
 import useUserStore from '../components/UserStore';
 import dm from '../assets/dm.png';
@@ -23,8 +25,69 @@ const UserPage = () => {
   const [followersCount, setFollowersCount] = useState(0);
   const { user: currentUser } = useUserStore();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [reputation, setReputation] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewsCursor, setReviewsCursor] = useState(null);
+  const [hasMoreReviews, setHasMoreReviews] = useState(true);
+  const [showDMModal, setShowDMModal] = useState(false);
+  const [dmMessage, setDmMessage] = useState('');
 
-  
+
+  useEffect(() => {
+    if (activeTab === "reviews") {
+      loadMoreReviews(true);
+    }
+  }, [activeTab]);
+
+  const loadMoreReviews = async (reset = false) => {
+    if (loadingReviews || (!reset && !hasMoreReviews)) return;
+    setLoadingReviews(true);
+
+    try {
+      console.log("cursor ", reviewsCursor)
+      const res = await axios.get(`http://localhost:5000/api/reviews/user/${id}`, {
+        params: {
+          cursor: reset ? undefined : reviewsCursor,
+          limit: 10,
+        }
+      });
+
+      const newReviews = res.data.reviews;
+      if (reset) {
+        setReviews(newReviews);
+      } else {
+        setReviews(prev => [...prev, ...newReviews]);
+      }
+
+      if (newReviews.length < 1) {
+        setHasMoreReviews(false);
+      }
+      console.log("next cursor ", res.data.nextCursor)
+
+      setReviewsCursor(res.data.nextCursor);
+    } catch (err) {
+      console.error("Review fetch failed:", err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  //Fetch Reputation
+  useEffect(() => {
+    const fetchReputation = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/reviews/reputation/${id}`);
+        console.log("rep ", res.data.reputation)
+        setReputation(res.data.reputation);
+      } catch (err) {
+        console.error("Failed to fetch reputation", err);
+      }
+    };
+
+    fetchReputation();
+  }, [id]);
+
   useEffect(() => {
     const fetchUser = async () => {
       const res = await axios.get(`http://localhost:5000/api/user/${id}`);
@@ -77,7 +140,7 @@ const UserPage = () => {
       alert("Please log in to follow users.");
       return;
     }
-  
+
     try {
       if (isFollowing) {
         // Unfollow
@@ -103,6 +166,38 @@ const UserPage = () => {
     }
   };
 
+  const handleDMClick = () => {
+    if (!currentUser) {
+      alert("Please log in to send a message.");
+      return;
+    }
+    setShowDMModal(true);
+  };
+
+  const sendMessage = async () => {
+    if (!dmMessage.trim()) {
+      alert("Message cannot be empty.");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:5000/api/dms/messages", {
+        senderId: currentUser.id,
+        receiver_id: user.id,
+        content: dmMessage.trim()
+      });
+
+      alert("Message sent!");
+      setShowDMModal(false);
+      setDmMessage('');
+    } catch (err) {
+      console.error("Failed to send message", err);
+      alert("Failed to send message.");
+    }
+  };
+
+
+
   return (
     <div className="user-profile-container">
       {/* Kullanıcı bilgileri */}
@@ -113,7 +208,7 @@ const UserPage = () => {
             src={star}
             alt="star"
             className="star-icon"
-          /> {user.reputation}</p>
+          />  {reputation !== null ? reputation : "Loading..."}</p>
 
           {currentUser?.id !== user.id && (
             <button className="follow-button" onClick={handleFollowToggle}>{isFollowing ? "Unfollow" : "Follow"}</button>
@@ -128,7 +223,7 @@ const UserPage = () => {
             />  {followersCount} </p>
 
           {currentUser?.id !== user.id && (
-            <button className="dm-button" onClick={() => alert("DM feature coming soon!")}>
+            <button className="dm-button" onClick={handleDMClick}>
               <img src={dm} alt="DM" className="dm-icon" />
             </button>
           )}
@@ -232,13 +327,62 @@ const UserPage = () => {
           )}
         </div>
       )}
-
       {activeTab === 'reviews' && (
-        <div>
-          {/* Sonraki adımda yazılacak */}
-          <p>User reviews will be shown here.</p>
+        <div className="reviews-container">
+          {reviews.map((rev, index) => (
+            <div key={rev.id || index} className="review-card">
+              <div className="review-stars">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <img
+                    key={i}
+                    src={i < rev.rating ? yellowStar : whiteStar}
+                    alt="star"
+                    className="star-icon"
+                  />
+                ))}
+              </div>
+
+              {/* Kullanıcı adı ve tarih */}
+              <div className="review-meta">
+                <span className="review-buyer">{rev.buyerName}</span>
+                <span className="review-date">{new Date(rev.createdAt).toLocaleDateString()}</span>
+              </div>
+
+              {/* Yorum içeriği */}
+              <p className="review-text">{rev.review}</p>
+            </div>
+          ))}
+
+          {hasMoreReviews && (
+            <button onClick={() => loadMoreReviews()} className="modal-button" disabled={loadingReviews}>
+              {loadingReviews ? "Loading..." : "Load More"}
+            </button>
+          )}
+          {!hasMoreReviews && reviews.length === 0 && (
+            <p>No reviews found.</p>
+          )}
         </div>
       )}
+      {showDMModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Send a Message to {user.name}</h3>
+            <textarea
+              rows="5"
+              value={dmMessage}
+              onChange={(e) => setDmMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="dm-textarea"
+            />
+            <div className="modal-buttons">
+              <button className="modal-button" onClick={sendMessage}>Send</button>
+              <button className="modal-button cancel" onClick={() => setShowDMModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 };

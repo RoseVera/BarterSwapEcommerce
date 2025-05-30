@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import useUserStore from "../../components/UserStore";
+
+
 function UserProfile() {
   const { user } = useUserStore();
   const [name, setName] = useState(user.name);
@@ -25,8 +27,7 @@ function UserProfile() {
 
   return (
     <div className="profile-form">
-      <h2>User Information</h2>
-      <input placeholder={user.name} value={name} onChange={(e) => setName(e.target.value)} />
+      <input placeholder= {user.name} value={name} onChange={(e) => setName(e.target.value)} />
       <input placeholder={user.student_id} value={studentId} onChange={(e) => setStudentId(e.target.value)} />
       <input placeholder={user.phone} value={phone} onChange={(e) => setPhone(e.target.value)} />
       <button onClick={handleUpdate}>Update</button>

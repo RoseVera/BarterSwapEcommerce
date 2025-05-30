@@ -18,11 +18,20 @@ const DirectMessage = sequelize.define("DirectMessage", {
   content: {
     type: DataTypes.TEXT,
   }, 
+  conversation_id: {
+  type: DataTypes.INTEGER,
+  allowNull: false,
+}
 
 }, {
   tableName: "direct_messages",
   timestamps: true,      
-  updatedAt: false 
+  updatedAt: false,
+  indexes: [
+  {
+    fields: ['conversation_id', 'createdAt'], 
+  }
+]
 });
 
 module.exports = DirectMessage;

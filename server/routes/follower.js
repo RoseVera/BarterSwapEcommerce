@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
   if (follower_id === followed_id) return res.status(400).json({ message: "Cannot follow yourself." });
 
   try {
-    const existing = await Follower.findOne({ where: { follower_id, followed_id } });
+    const existing = await Follower.findOne({ where: { follower_id, followed_id } }); //It uses index
     if (existing) return res.status(400).json({ message: "Already following." });
 
     await Follower.create({ follower_id, followed_id });
@@ -22,7 +22,7 @@ router.post("/", async (req, res) => {
 
 router.get("/count/:userId", async (req, res) => {
   try {
-    const count = await Follower.count({ where: { followed_id: req.params.userId } });
+    const count = await Follower.count({ where: { followed_id: req.params.userId } }); //it uses idx_followed_id as index
     res.json({ count });
   } catch (err) {
     res.status(500).json({ message: "Internal server error." });
@@ -36,7 +36,7 @@ router.get("/is-following", async (req, res) => {
     if (!follower_id || !followed_id) return res.status(400).json({ message: "Invalid query parameters." });
   
     try {
-      const existing = await Follower.findOne({ where: { follower_id, followed_id } });
+      const existing = await Follower.findOne({ where: { follower_id, followed_id } }); //it uses followers_follower_id_followed_id_key
       res.json({ isFollowing: !!existing });
     } catch (err) {
       res.status(500).json({ message: "Internal server error." });
@@ -49,7 +49,7 @@ router.get("/is-following", async (req, res) => {
     const offset = (page - 1) * limit;
   
     try {
-      const { count, rows } = await Follower.findAndCountAll({
+      const { count, rows } = await Follower.findAndCountAll({ //it uses idx_follower_created_at
         where: { follower_id: req.params.followerId },
         include: [{ model: User, as: "followed", attributes: ["id", "name"] }],
         order: [["createdAt", "DESC"]],

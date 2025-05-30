@@ -17,7 +17,15 @@ const Conversation = sequelize.define("Conversation", {
   },
 }, {
   tableName: "conversations",
-  timestamps: true, // createdAt ve updatedAt için
+  timestamps: true, // createdAt and updatedAt 
+  indexes: [
+    {
+      fields: ['participant_one_id', 'updatedAt'], // user'ın konuşmalarını updatedAt'e göre çekmek için
+    },
+    {
+      fields: ['participant_two_id', 'updatedAt'], // ikinci kullanıcı için aynı amaç
+    }
+  ]
 });
 
 module.exports = Conversation;

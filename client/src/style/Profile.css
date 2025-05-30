@@ -178,37 +178,7 @@
 }
 
 
-/*DM*/
-.dm-container {
-  display: flex;
 
-}
-
-.chat-list {
-  width: 200px;
-  background-color: #e6b2ba;
-  padding: 20px;
-  border-radius: 20px;
-
-
-}
-
-.chat-user {
-  padding: 10px;
-  background-color: #fad0c4;
-  margin-bottom: 10px;
-  cursor: pointer;
-  border-radius: 20px;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
-}
-
-.chat-window {
-  flex: 1;
-  background-color: #fad0c4;
-  border-radius: 40px;
-  padding: 20px;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
-}
 
 
 /*FOLLLOWED*/
@@ -228,13 +198,14 @@
 
 /*PROFILE FORM*/
 .profile-form {
-  display: flex;
-  flex-direction: column;
+  display:flex;
+  flex-direction:column;
   gap: 10px;
 }
 
 .profile-form input {
   padding: 10px;
+  max-width: 20rem;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
@@ -242,6 +213,7 @@
 .profile-form button {
   background-color: #fad0c4;
   border: none;
+  max-width: 20rem;
   padding: 10px;
   border-radius: 5px;
   cursor: pointer;
