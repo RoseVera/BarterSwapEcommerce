@@ -54,7 +54,7 @@ function MyItems() {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        let url = `http://localhost:5000/api/items?user_id=${user.id}`;
+        let url = `http://localhost:5000/api/items/myItems?user_id=${user.id}`;
         if (filter === "bid") {
           url += "&is_bid=true";
         } else if (filter === "non-bid") {

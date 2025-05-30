@@ -33,7 +33,7 @@ Item.hasOne(Transaction, { foreignKey: "item_id" });
 Transaction.belongsTo(Item, { foreignKey: "item_id" });
 
 // TRANSACTION - REVIEW (1:1)
-Transaction.hasMany(Review, { foreignKey: "transaction_id" });
+Transaction.hasOne(Review, { foreignKey: "transaction_id" });
 Review.belongsTo(Transaction, { foreignKey: "transaction_id" });
 
 // USER - BONUS (1:N)
@@ -47,6 +47,17 @@ DirectMessage.belongsTo(User, { foreignKey: "sender_id", as: "Sender" });
 // USER - DIRECTMESSAGE (1:N) as Receiver
 User.hasMany(DirectMessage, { foreignKey: "receiver_id", as: "ReceivedMessages" });
 DirectMessage.belongsTo(User, { foreignKey: "receiver_id", as: "Receiver" });
+
+// DIRECT MESSAGE - CONVERSATION
+Conversation.hasMany(DirectMessage, { foreignKey: "conversation_id" });
+DirectMessage.belongsTo(Conversation, { foreignKey: "conversation_id" });
+
+// USER - CONVERSATION Associations
+User.hasMany(Conversation, { foreignKey: "participant_one_id", as: "ConversationsAsOne" });
+User.hasMany(Conversation, { foreignKey: "participant_two_id", as: "ConversationsAsTwo" });
+
+Conversation.belongsTo(User, { foreignKey: "participant_one_id", as: "ParticipantOne" });
+Conversation.belongsTo(User, { foreignKey: "participant_two_id", as: "ParticipantTwo" });
 
 // USER - FOLLOWERS (M:N with self-reference)
 User.belongsToMany(User, {
@@ -66,13 +77,6 @@ User.belongsToMany(User, {
 // FOLLOWER -> FOLLOWED USER (N:1)
 Follower.belongsTo(User, { foreignKey: 'followed_id', as: 'followed' });
 
-// USER - CONVERSATION (1:N) as Participant One
-User.hasMany(Conversation, { foreignKey: "participant_one_id", as: "ConversationsStarted" });
-Conversation.belongsTo(User, { foreignKey: "participant_one_id", as: "ParticipantOne" });
-
-// USER - CONVERSATION (1:N) as Participant Two
-User.hasMany(Conversation, { foreignKey: "participant_two_id", as: "ConversationsReceived" });
-Conversation.belongsTo(User, { foreignKey: "participant_two_id", as: "ParticipantTwo" });
 
 module.exports = {
   User,

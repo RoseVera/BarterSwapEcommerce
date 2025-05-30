@@ -1,7 +1,10 @@
 const express = require("express");
-const Item = require("../models/Item"); 
-const User = require("../models/User");  
-const { ensureAuth } = require('../middleware/auth'); 
+const Item = require("../models/Item");
+const User = require("../models/User");
+const Transaction = require("../models/Transaction");
+const Review = require("../models/Review");
+
+const { ensureAuth } = require('../middleware/auth');
 const sequelize = require('../sequelize');
 const router = express.Router();
 const { Op } = require("sequelize");
@@ -79,7 +82,7 @@ router.post('/:id/purchase', ensureAuth, async (req, res) => {
       }
     );
 
-    res.json({ message: result[0].purchase_item }); 
+    res.json({ message: result[0].purchase_item });
 
   } catch (err) {
     console.error('Purchase error:', err);
@@ -139,7 +142,7 @@ router.post('/:id/bid', ensureAuth, async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/myItems", async (req, res) => {
   const { user_id, is_bid } = req.query;
 
   if (!user_id) {
@@ -247,7 +250,8 @@ router.get("/user-items", async (req, res) => {
   try {
     const { rows, count } = await Item.findAndCountAll({
       where: {
-        user_id: userId
+        user_id: userId,
+        is_active: true
       },
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
@@ -264,6 +268,79 @@ router.get("/user-items", async (req, res) => {
     console.error('User items fetch error:', err);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+router.get("/purchased-items", async (req, res) => {
+  const { userId, cursor } = req.query;
+  const limit = 10;
+  //CREATE INDEX idx_transaction_buyer_id_created_at ON public.transactions USING btree (buyer_id, "createdAt" DESC)
+  //CREATE INDEX idx_review_transaction_id ON reviews (transaction_id);
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  try {
+    const where = {
+      buyer_id: userId
+    };
+
+    if (cursor) {
+      const [cursorDate, cursorId] = cursor.split("_");
+      where[Op.or] = [
+        {
+          createdAt: { [Op.lt]: cursorDate }
+        },
+        {
+          createdAt: cursorDate,
+          id: { [Op.lt]: cursorId }
+        }
+      ];
+    }
+
+    const purchases = await Transaction.findAll({
+      where,
+      include: [
+        {
+          model: Item,
+          attributes: ["id", "title", "is_bid"]
+        },
+        {
+          model: User,
+          as: "Seller",
+          attributes: ["id", "name"]
+        },
+        {
+          model: Review,
+          attributes: ["review", "rating"]
+        }
+      ],
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "DESC"]
+      ],
+      limit
+    });
+
+    const nextCursor = purchases.length === limit
+      ? `${purchases[purchases.length - 1].createdAt.toISOString()}_${purchases[purchases.length - 1].id}`
+      : null;
+
+    console.log("Returned Purchases:");
+    purchases.forEach((p, index) => {
+      console.log(`[${index + 1}] id: ${p.id}, createdAt: ${p.createdAt.toISOString()}`);
+    });
+    console.log("Next Cursor:", nextCursor);
+
+    res.json({
+      purchases,
+      nextCursor
+    });
+
+  } catch (err) {
+    console.error("Cursor pagination fetch error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+
 });
 
 router.get('/:id', async (req, res) => {
@@ -288,6 +365,8 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+module.exports = router;
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
