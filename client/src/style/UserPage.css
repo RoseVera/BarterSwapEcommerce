@@ -156,7 +156,7 @@
 .load-more-button {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background-color: #ab47bc;
+  background-color: #C599B6;
   color: white;
   border: none;
   border-radius: 8px;
@@ -164,7 +164,7 @@
 }
 
 .load-more-button:hover {
-  background-color: #8e24aa;
+  background-color: #a26d92;
 }
 
 .modal-overlay {

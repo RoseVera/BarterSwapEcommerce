@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import useUserStore from '../src/components/UserStore';
 import ItemDetail from './pages/ItemDetail';
 import User from './pages/UserPage';
+import Admin from './pages/Admin';
 
 
 
@@ -42,13 +43,22 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/item/:id" element={<ItemDetail />} /> 
-          <Route path="/user/:id" element={<User />} /> 
+          <Route path="/item/:id" element={<ItemDetail />} />
+          <Route path="/user/:id" element={<User />} />
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['USER']}>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Admin />
               </ProtectedRoute>
             }
           />

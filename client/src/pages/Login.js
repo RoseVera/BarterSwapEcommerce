@@ -17,10 +17,17 @@ function Login() {
         email,
         password
       }, { withCredentials: true });
-  
+
       const data = res.data; // ✅ axios otomatik parse eder
       setUser(data.user);
-      navigate("/");
+      if (data.user.role == "ADMIN") {
+        console.log(data.user.role)
+
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+
     } catch (err) {
       console.log(err);
       if (err.response && err.response.data && err.response.data.message) {
@@ -30,37 +37,37 @@ function Login() {
       }
     }
   };
-  
+
   return (
     <div className="home-container">
-      
-  
-    <div className="login-container">
-      <h2>Login</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        className="login-input"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <div className="password-wrapper">
+
+
+      <div className="login-container">
+        <h2>Login</h2>
         <input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Password"
+          type="email"
+          placeholder="Email"
           className="login-input"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
-        <span
-          className="toggle-password"
-          onClick={() => setShowPassword(!showPassword)}
-        >
-          {showPassword ? '🙈' : '👁️'}
-        </span>
+        <div className="password-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            className="login-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <span
+            className="toggle-password"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? '🙈' : '👁️'}
+          </span>
+        </div>
+        <button className="login-button" onClick={handleLogin}>Login</button>
       </div>
-      <button className="login-button" onClick={handleLogin}>Login</button>
-    </div>
     </div>
   );
 }

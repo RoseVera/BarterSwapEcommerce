@@ -77,6 +77,11 @@ User.belongsToMany(User, {
 // FOLLOWER -> FOLLOWED USER (N:1)
 Follower.belongsTo(User, { foreignKey: 'followed_id', as: 'followed' });
 
+// USER - REVIEW (1:N)
+User.hasMany(Review, { foreignKey: "user_id" });
+Review.belongsTo(User, { foreignKey: "user_id" });
+
+Bonus.belongsTo(User, { foreignKey: "user_id"});
 
 module.exports = {
   User,

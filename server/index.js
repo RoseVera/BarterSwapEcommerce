@@ -11,6 +11,8 @@ const userRoutes = require("./routes/user");
 const followerRoutes = require("./routes/follower");
 const reviewRoutes = require("./routes/review");
 const dmRoutes = require("./routes/dm");
+const statsRoutes = require("./routes/stats");
+const adminRoutes = require("./routes/admin");
 
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -32,6 +34,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/followers", followerRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/dms", dmRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/admin", adminRoutes);
 
 require("./models/Associations");
 require("dotenv").config();

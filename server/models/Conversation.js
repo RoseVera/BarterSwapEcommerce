@@ -18,12 +18,20 @@ const Conversation = sequelize.define("Conversation", {
 }, {
   tableName: "conversations",
   timestamps: true, // createdAt and updatedAt 
-  indexes: [
+ indexes: [
     {
-      fields: ['participant_one_id', 'updatedAt'], // user'ın konuşmalarını updatedAt'e göre çekmek için
+      name: "idx_conversations_user1_updated_at",
+      fields: [
+        "participant_one_id",
+        { attribute: "updatedAt", order: "DESC" } 
+      ],
     },
     {
-      fields: ['participant_two_id', 'updatedAt'], // ikinci kullanıcı için aynı amaç
+      name: "idx_conversations_user2_updated_at",
+      fields: [
+        "participant_two_id",
+        { attribute: "updatedAt", order: "DESC" }
+      ],
     }
   ]
 });

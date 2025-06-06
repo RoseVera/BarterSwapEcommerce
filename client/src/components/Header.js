@@ -22,12 +22,17 @@ function Header() {
     navigate("/login");
   };
 
+  const handleAdmin = () => {
+    navigate("/admin");
+  };
+
   const handleProfileClick = () => {
     navigate("/profile");
   };
   const handleLogoClick = () => {
     navigate("/");
   };
+
 
   return (
     <>
@@ -37,23 +42,29 @@ function Header() {
         </div>
         <div className="header-right">
           {user ? (
-            <div className="user-info">
-              
-              <img
-                src={coin}
-                alt="coin"
-                style={{ width: "20px", verticalAlign: "middle", marginRight: "-8px", marginBottom: "1px" }}
-              />
-               <span className="welcome-message"> {user.balance}</span>
-              <span className="welcome-message"> {user.name}</span>
-              <img
-                src={profileIcon}
-                alt="Profile"
-                className="profile-icon"
-                onClick={handleProfileClick}
-              />
-              <button className="header-button" onClick={handleLogout}>Logout</button>
-            </div>
+            user.role === 'ADMIN' ? (
+              <div className="user-info">
+                <button className="header-button" onClick={ handleAdmin} >ADMIN</button>
+                <button className="header-button" onClick={handleLogout}>Logout</button>
+              </div>
+            ) : (
+              <div className="user-info">
+                <img
+                  src={coin}
+                  alt="coin"
+                  style={{ width: "20px", verticalAlign: "middle", marginRight: "-8px", marginBottom: "1px" }}
+                />
+                <span className="welcome-message"> {user.balance}</span>
+                <span className="welcome-message"> {user.name}</span>
+                <img
+                  src={profileIcon}
+                  alt="Profile"
+                  className="profile-icon"
+                  onClick={handleProfileClick}
+                />
+                <button className="header-button" onClick={handleLogout}>Logout</button>
+              </div>
+            )
           ) : (
             <>
               <Link to="/login"><button className="header-button">Login</button></Link>
@@ -61,22 +72,15 @@ function Header() {
             </>
           )}
         </div>
-
       </header>
-      <div className="awning-row">
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
-        <img src={awningIcon} alt="Awning" className="awning-image" />
 
-      </div>     </>
+      <div className="awning-row">
+        {[...Array(9)].map((_, index) => (
+          <img key={index} src={awningIcon} alt="Awning" className="awning-image" />
+        ))}
+      </div>
+    </>
   );
 }
-
 
 export default Header;

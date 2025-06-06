@@ -22,7 +22,13 @@ const Bid = sequelize.define("Bid", {
 }, {
   tableName: "bids",
   timestamps: true,      
-  updatedAt: false 
+  updatedAt: false,
+  indexes: [
+    {
+      name: "idx_bids_itemid_bidamount_desc",
+      fields: ["item_id", { attribute: "bid_amount", order: "DESC" }],
+    }
+  ]
 });
 
 module.exports = Bid;

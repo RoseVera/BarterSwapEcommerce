@@ -186,17 +186,16 @@ function Home() {
           >
             &larr;
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-            
+         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+  <button
+    key={page} // ✅ Buraya eklenmeli
+    onClick={() => handlePageChange(page)}
+    className={page === currentPage ? "active-page" : ""}
+  >
+    {page}
+  </button>
+))}
 
-            
-              onClick={() => handlePageChange(page)}
-              className={page === currentPage ? "active-page" : ""}
-            >
-              {page}
-            </button>
-          ))}
           <button
             onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
             disabled={currentPage === totalPages}

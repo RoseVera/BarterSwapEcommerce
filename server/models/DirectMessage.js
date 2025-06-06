@@ -29,7 +29,11 @@ const DirectMessage = sequelize.define("DirectMessage", {
   updatedAt: false,
   indexes: [
   {
-    fields: ['conversation_id', 'createdAt'], 
+    name: "idx_dm_conversation_created_at_asc",
+    fields: [
+      "conversation_id",
+      { attribute: "createdAt", order: "ASC" }
+    ]
   }
 ]
 });

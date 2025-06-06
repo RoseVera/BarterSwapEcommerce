@@ -26,8 +26,30 @@ const Transaction = sequelize.define("Transaction", {
 
 }, {
   tableName: "transactions",
-  timestamps: true,      
-  updatedAt: false 
+  timestamps: true,
+  updatedAt: false,
+  indexes: [
+    {
+      name: "idx_transactions_buyer_id",
+      fields: ["buyer_id"],
+    },
+    {
+      name: "idx_transaction_buyer_id_created_at",
+      fields: ["buyer_id", { attribute: "createdAt", order: "DESC" }],
+    },
+    {
+      name: 'idx_transactions_seller_id',
+      fields: ["seller_id"]
+    },
+    {
+      name: 'idx_transactions_created_at',
+      fields: ["createdAt"]
+    },
+     {
+    name: "idx_transaction_createdat_id",
+    fields: [{ attribute: "createdAt", order: "ASC" }, { attribute: "id", order: "DESC" }],
+  }
+  ]
 });
 
 module.exports = Transaction;

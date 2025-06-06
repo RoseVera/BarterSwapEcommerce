@@ -21,8 +21,23 @@ const Bonus = sequelize.define("Bonus", {
   },
 }, {
   tableName: "bonuses",
-  timestamps: true,      
-  updatedAt: false 
+  timestamps: true,
+  updatedAt: false,
+
+  indexes: [
+    {
+      name: "idx_bonuses_user_id",
+      fields: ["user_id"],
+    },
+    {
+      name: "idx_bonus_type_createdat_id",
+      fields: ["type", { attribute: "createdAt", order: "ASC" }, { attribute: "id", order: "DESC" }],
+    }
+  ]
 });
+
+Bonus.associate = (models) => {
+  Bonus.belongsTo(models.User, { foreignKey: "user_id" });
+};
 
 module.exports = Bonus;
