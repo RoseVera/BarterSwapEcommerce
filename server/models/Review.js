@@ -21,7 +21,17 @@ const Review = sequelize.define("Review", {
 }, {
   tableName: "reviews",
   timestamps: true,      
-  updatedAt: false  
+  updatedAt: false,
+  indexes: [
+    {
+      name: "idx_review_transaction_id",
+      fields: ["transaction_id"],
+    },
+    {
+      name: "idx_reviews_transaction_createdat",
+      fields: ["transaction_id", { attribute: "createdAt", order: "DESC" }],
+    }
+  ]  
 });
 
 module.exports = Review;

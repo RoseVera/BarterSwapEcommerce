@@ -69,7 +69,7 @@ router.get("/messages/:conversationId/user/:userId", async (req, res) => {
 
     const messages = await DirectMessage.findAll({
       /*Composite index for fetching messages of a conversation sorted by time
-      CREATE INDEX idx_dm_conversation_created_at ON direct_messages (conversation_id, createdAt); */
+      CREATE INDEX idx_dm_conversation_created_at ON direct_messages (conversation_id, createdAt ASC); */
       where: { conversation_id: conversationId },
       order: [["createdAt", "ASC"]],
     });

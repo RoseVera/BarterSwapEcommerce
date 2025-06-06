@@ -20,8 +20,8 @@ const Item = sequelize.define("Item", {
   },
   category: {
     type: DataTypes.ENUM(
-      'BOOK', 'CLOTHING', 'SHOES', 'TEXTILE', 'STATIONERY', 
-      'ELECTRONICS', 'TOYS', 'SPORT', 'BEAUTY', 'ART', 'MUSIC', 
+      'BOOK', 'CLOTHING', 'SHOES', 'TEXTILE', 'STATIONERY',
+      'ELECTRONICS', 'TOYS', 'SPORT', 'BEAUTY', 'ART', 'MUSIC',
       'FURNITURE', 'JEWELRY', 'HEALTH', 'OTHER'
     ),
     allowNull: false,
@@ -52,9 +52,46 @@ const Item = sequelize.define("Item", {
   },
 }, {
   tableName: "items",
-  timestamps: true,      
-  updatedAt: false 
+  timestamps: true,
+  updatedAt: false,
+  indexes: [ //PostgreSQL, bir bileşik index’in en başındaki sütunlar varsa, bu index’i hala kullanabilir:
+    {
+      name: "idx_items_user_id_is_active_is_bid",
+      fields: ["user_id", "is_active", "is_bid"],
+    },
+    {
+      name: "idx_items_active_id",
+      fields: ["is_active", "id"]
+    },
+    {
+      name: "idx_items_isbids",
+      fields: ["is_bid"],
+    },
+    {
+      name: "idx_items_category",
+      fields: ["category"],
+    },
+    {
+      name: "idx_items_condition",
+      fields: ["condition"],
+    },
+    {
+      name: "idx_items_price",
+      fields: ["starting_price"],
+    },
+    {
+      name: "idx_items_createdat",
+      fields: [{ attribute: "createdAt", order: "DESC" }],
+    },
+    {
+      name: "idx_items_active_condition",
+      fields: ["is_active", "condition"]
+    },
+    {
+      name: "idx_items_active_category",
+      fields: ["is_active", "category"]
+    }
+  ],
 });
 
 module.exports = Item;
- 

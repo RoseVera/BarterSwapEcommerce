@@ -54,11 +54,27 @@ const User = sequelize.define("User", {
   balance: {
     type: DataTypes.INTEGER,
     allowNull: false,
-  }
+  },
+  is_deleted: {
+  type: DataTypes.BOOLEAN,
+  allowNull: false,
+  defaultValue: false,
+}
 
 }, {
   tableName: "users",
   timestamps: false,
+  indexes: [
+    {
+      name: "users_email_key",
+      unique: true,
+      fields: ["email"],
+    },
+     {
+        name: "idx_users_role_deleted_id",
+        fields: ["role", "is_deleted", "id"],
+      },
+  ]
 });
 
 module.exports = User;
