@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { Op, fn, col, literal, Sequelize } = require("sequelize");
+const { Op, fn, col, Sequelize } = require("sequelize");
 const Item = require("../models/Item");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 const Bid = require("../models/Bid");
 const Bonus = require("../models/Bonus");
-const db = require("../db"); // pg pool
+const pool = require("../db"); // pg pool
 const { Parser } = require('json2csv');
 
 //DASHBOARD API
@@ -102,9 +102,9 @@ router.get("/users", async (req, res) => {
     } 
 
     //index : name: "idx_users_role_deleted_id",
-    const result = await db.query(query, values);
+    const result = await pool.query(query, values);
 
-    const totalQuery = await db.query(
+    const totalQuery = await pool.query(
       `SELECT COUNT(*) FROM users WHERE role='USER' AND is_deleted = $1`,
       [showDeleted]
     );
@@ -126,10 +126,10 @@ router.patch("/users/:id/:showDeleted", async (req, res) => {
   try {
 
     if (req.params.showDeleted == 'true') {
-      await db.query("UPDATE users SET is_deleted = FALSE WHERE id = $1", [req.params.id]);
+      await pool.query("UPDATE users SET is_deleted = FALSE WHERE id = $1", [req.params.id]);
       res.sendStatus(200);
     } else {
-      await db.query("UPDATE users SET is_deleted = TRUE WHERE id = $1", [req.params.id]);
+      await pool.query("UPDATE users SET is_deleted = TRUE WHERE id = $1", [req.params.id]);
       res.sendStatus(200);
     }
 

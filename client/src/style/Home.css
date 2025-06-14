@@ -41,6 +41,18 @@
     position: relative;
     background-color: #FAD0C4;
     padding: 10px;
+    height: 350px; /* sabit kart yüksekliği */
+    border-radius: 20px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+    .item-card-ph {
+     min-width: 300px; /* içeriğe göre ayarlanabilir */
+    width: 100%;
+    position: relative;
+    background-color: #FAD0C4;
+    padding: 10px;
     border-radius: 20px;
     text-align: center;
     font-weight: bold;

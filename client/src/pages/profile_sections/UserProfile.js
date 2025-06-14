@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import useUserStore from "../../components/UserStore";
-
+import { toast } from "react-toastify";
 
 function UserProfile() {
   const { user } = useUserStore();
@@ -9,19 +9,18 @@ function UserProfile() {
   const [studentId, setStudentId] = useState(user.student_id);
   const [phone, setPhone] = useState(user.phone);
 
-
   const handleUpdate = async () => {
     try {
-      const userId = user.id; // Giriş yapan kullanıcının ID’si (dinamik olarak alman gerekebilir)
+      const userId = user.id; 
       await axios.put(`http://localhost:5000/api/user/update/${userId}`, {
         name,
         student_id: studentId,
         phone,
       });
-      alert("User info updated successfully.");
+      toast.success("User info updated successfully.");
     } catch (error) {
       console.error("Update failed:", error);
-      alert("Error updating user info.");
+      toast.error("Error updating user info.");
     }
   };
 

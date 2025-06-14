@@ -44,6 +44,7 @@ function DM() {
     setMessages((prev) => [...prev, res.data]);
     setNewMessage("");
   };
+  
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const hours = date.getHours().toString().padStart(2, "0");

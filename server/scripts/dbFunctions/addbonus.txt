@@ -1,0 +1,34 @@
+-- FUNCTION: public.add_bonus(integer, integer, enum_bonuses_type)
+
+-- DROP FUNCTION IF EXISTS public.add_bonus(integer, integer, enum_bonuses_type);
+
+CREATE OR REPLACE FUNCTION public.add_bonus(
+	p_user_id integer,
+	p_amount integer,
+	p_type enum_bonuses_type)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+BEGIN
+  -- Bonus insert
+  INSERT INTO bonuses (user_id, amount, type, "createdAt")
+  VALUES (p_user_id, p_amount, p_type, NOW());
+
+  -- add bonus to user
+  UPDATE users
+  SET balance = balance + p_amount
+  WHERE id = p_user_id;
+
+  RETURN 'Bonus successfully added';
+  
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'Bonus transaction failed: %', SQLERRM;
+    RAISE;
+END;
+$BODY$;
+
+ALTER FUNCTION public.add_bonus(integer, integer, enum_bonuses_type)
+    OWNER TO postgres;

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-
 router.get("/highest/:item_id", async (req, res) => {
   const { item_id } = req.params;
   try {

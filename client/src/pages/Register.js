@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../style/Register.css';
 import '../style/Home.css';
+import { toast } from "react-toastify";
 
 function Register() {
   const navigate = useNavigate();
@@ -15,10 +16,10 @@ function Register() {
   const handleRegister = async () => {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/register", form);
-      alert("Registered successfully");
-      //navigate("/login");
+      toast.success("Registered successfully");
+      navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Register failed");
+      toast.error(err.response?.data?.message || "Register failed");
     }
   };
 

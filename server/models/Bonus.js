@@ -26,12 +26,15 @@ const Bonus = sequelize.define("Bonus", {
 
   indexes: [
     {
-      name: "idx_bonuses_user_id",
-      fields: ["user_id"],
+      name: "idx_bonuses_user_id_createdAt",
+      fields: [
+        { attribute: "user_id" },
+        { attribute: "createdAt", order: "ASC" }
+      ]
     },
     {
       name: "idx_bonus_type_createdat_id",
-      fields: ["type", { attribute: "createdAt", order: "ASC" }, { attribute: "id", order: "DESC" }],
+      fields: [{attribute: "type"}, { attribute: "createdAt", order: "ASC" }, { attribute: "id", order: "DESC" }],
     }
   ]
 });

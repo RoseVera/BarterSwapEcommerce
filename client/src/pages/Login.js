@@ -4,6 +4,8 @@ import useUserStore from '../components/UserStore';
 import axios from 'axios';
 import '../style/Login.css';
 import '../style/Home.css';
+import { toast } from "react-toastify";
+
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -18,30 +20,28 @@ function Login() {
         password
       }, { withCredentials: true });
 
-      const data = res.data; // ✅ axios otomatik parse eder
-      setUser(data.user);
+      const data = res.data; 
       if (data.user.role == "ADMIN") {
         console.log(data.user.role)
-
+        toast.success("Login successful!");
         navigate("/admin");
       } else {
+        toast.success("Login successful!");
         navigate("/");
       }
 
     } catch (err) {
       console.log(err);
       if (err.response && err.response.data && err.response.data.message) {
-        alert(err.response.data.message);
+        toast.error(err.response.data.message);
       } else {
-        alert("Login failed");
+        toast.success("Login successful!");
       }
     }
   };
 
   return (
     <div className="home-container">
-
-
       <div className="login-container">
         <h2>Login</h2>
         <input

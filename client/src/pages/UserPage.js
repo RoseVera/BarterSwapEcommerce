@@ -13,14 +13,13 @@ import yellowStar from '../assets/yellowStar.png';
 import followers from '../assets/followers.png';
 import useUserStore from '../components/UserStore';
 import dm from '../assets/dm.png';
+import { toast } from "react-toastify";
 
 const UserPage = () => {
   const { id } = useParams(); // user id from URL
   const [activeTab, setActiveTab] = useState('items'); // default: items
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const [followersCount, setFollowersCount] = useState(0);
   const { user: currentUser } = useUserStore();
@@ -28,50 +27,14 @@ const UserPage = () => {
   const [reputation, setReputation] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const [loadingItems, setLoadingItems] = useState(false);
   const [reviewsCursor, setReviewsCursor] = useState(null);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
+  const [itemsCursor, setItemsCursor] = useState(null);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
   const [showDMModal, setShowDMModal] = useState(false);
   const [dmMessage, setDmMessage] = useState('');
 
-
-  useEffect(() => {
-    if (activeTab === "reviews") {
-      loadMoreReviews(true);
-    }
-  }, [activeTab]);
-
-  const loadMoreReviews = async (reset = false) => {
-    if (loadingReviews || (!reset && !hasMoreReviews)) return;
-    setLoadingReviews(true);
-
-    try {
-      console.log("cursor ", reviewsCursor)
-      const res = await axios.get(`http://localhost:5000/api/reviews/user/${id}`, {
-        params: {
-          cursor: reset ? undefined : reviewsCursor,
-          limit: 10,
-        }
-      });
-
-      const newReviews = res.data.reviews;
-      if (reset) {
-        setReviews(newReviews);
-      } else {
-        setReviews(prev => [...prev, ...newReviews]);
-      }
-
-      if (newReviews.length < 1) {
-        setHasMoreReviews(false);
-      }
-      console.log("next cursor ", res.data.nextCursor)
-
-      setReviewsCursor(res.data.nextCursor);
-    } catch (err) {
-      console.error("Review fetch failed:", err);
-    } finally {
-      setLoadingReviews(false);
-    }
-  };
 
   //Fetch Reputation
   useEffect(() => {
@@ -88,6 +51,7 @@ const UserPage = () => {
     fetchReputation();
   }, [id]);
 
+  //get User
   useEffect(() => {
     const fetchUser = async () => {
       const res = await axios.get(`http://localhost:5000/api/user/${id}`);
@@ -97,6 +61,7 @@ const UserPage = () => {
     fetchUser();
   }, [id]);
 
+  //Follower Count
   useEffect(() => {
     if (user?.id) {
       axios.get(`http://localhost:5000/api/followers/count/${user.id}`)
@@ -105,18 +70,86 @@ const UserPage = () => {
     }
   }, [user]);
 
+  //Fetch reviews
   useEffect(() => {
-    if (activeTab === 'items') {
-      const fetchItems = async () => {
-        const res = await axios.get(`http://localhost:5000/api/items/user-items?userId=${id}&page=${page}`);
-        setItems(res.data.items);
-        setTotalPages(res.data.totalPages);
-      };
-
-      fetchItems();
+    if (activeTab === "reviews") {
+      loadMoreReviews(true);
     }
-  }, [id, page, activeTab]);
+  }, [activeTab]);
 
+  const loadMoreReviews = async (reset = false) => {
+    if (loadingReviews || (!reset && !hasMoreReviews)) return;
+    setLoadingReviews(true);
+
+    try {
+      const res = await axios.get(`http://localhost:5000/api/reviews/user/${id}`, {
+        params: {
+          cursor: reset ? undefined : reviewsCursor,
+          limit: 2,
+        }
+      });
+
+      const newReviews = res.data.reviews;
+      if (reset) {
+        setReviews(newReviews);
+      } else {
+        setReviews(prev => [...prev, ...newReviews]);
+      }
+      if (newReviews.length < 1) {
+        setHasMoreReviews(false);
+      }
+      setReviewsCursor(res.data.nextCursor);
+    } catch (err) {
+      console.error("Review fetch failed:", err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  //Fetch Items
+  useEffect(() => {
+    if (activeTab === "items") {
+      fetchItems(true);
+    }
+  }, [activeTab]);
+
+  const fetchItems = async (reset = false) => {
+    if (loadingItems || (!reset && !hasMoreItems)) return;
+
+    setLoadingItems(true);
+
+    try {
+      const res = await axios.get("http://localhost:5000/api/items/user-items", {
+        params: {
+          userId: id,
+          cursor: reset ? undefined : itemsCursor,
+        },
+      });
+
+      const newItems = res.data.items;
+      const nextCursor = res.data.nextCursor;
+
+      if (reset) {
+        setItems(newItems);
+      } else {
+        setItems(prev => [...prev, ...newItems]);
+      }
+
+      if (!nextCursor || newItems.length === 0) {
+        setHasMoreItems(false);
+      } else {
+        setItemsCursor(nextCursor); // update if there is  nextCursor 
+      }
+
+    } catch (err) {
+      console.error("Error loading items", err);
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
+
+  //Does current user follow the user?
   useEffect(() => {
     if (currentUser?.id && user?.id) {
       axios.get(`http://localhost:5000/api/followers/is-following`, {
@@ -132,12 +165,17 @@ const UserPage = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setPage(1); // reset page
+    if (tab === "items") {
+      fetchItems(true); 
+    } else if (tab === "reviews") {
+      loadMoreReviews(true);
+    }
   };
 
+  //Follow/Unfollow the user
   const handleFollowToggle = async () => {
     if (!currentUser) {
-      alert("Please log in to follow users.");
+      toast.warning("Please log in to follow users.");
       return;
     }
 
@@ -162,21 +200,23 @@ const UserPage = () => {
         setIsFollowing(true);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Follow/unfollow failed.");
+      toast.error(err.response?.data?.message || "Follow/unfollow failed.");
     }
   };
 
+  //DM click
   const handleDMClick = () => {
     if (!currentUser) {
-      alert("Please log in to send a message.");
+      toast.warning("Please log in to send a message.");
       return;
     }
     setShowDMModal(true);
   };
 
+  //Send DM
   const sendMessage = async () => {
     if (!dmMessage.trim()) {
-      alert("Message cannot be empty.");
+       toast.warning("Message cannot be empty.");
       return;
     }
 
@@ -187,20 +227,18 @@ const UserPage = () => {
         content: dmMessage.trim()
       });
 
-      alert("Message sent!");
+      toast.success("Message sent!");
       setShowDMModal(false);
       setDmMessage('');
     } catch (err) {
       console.error("Failed to send message", err);
-      alert("Failed to send message.");
+      toast.error("Failed to send message.");
     }
   };
 
-
-
   return (
     <div className="user-profile-container">
-      {/* Kullanıcı bilgileri */}
+      {/* USER INFO */}
       {user && (
         <div className="user-header">
           <h1 className="user-name">{user.name}</h1>
@@ -231,7 +269,7 @@ const UserPage = () => {
         </div>
       )}
 
-      {/* Tab Seçici */}
+      {/* Tab Choice */}
       <div className="tab-buttons">
         <button
           onClick={() => handleTabChange('items')}
@@ -247,7 +285,7 @@ const UserPage = () => {
         </button>
       </div>
 
-      {/* İçerik */}
+      {/* Content */}
       {activeTab === 'items' && (
         <div>
           <div className="user-item-grid">
@@ -305,28 +343,16 @@ const UserPage = () => {
             ))}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button onClick={() => setPage(Math.max(page - 1, 1))} disabled={page === 1}>
-                &larr;
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={page === p ? 'active-page' : ''}
-                >
-                  {p}
-                </button>
-              ))}
-              <button onClick={() => setPage(Math.min(page + 1, totalPages))} disabled={page === totalPages}>
-                &rarr;
+          {hasMoreItems && (
+            <div className="text-center mt-4">
+              <button onClick={() => fetchItems()} className="modal-button" disabled={loadingItems}>
+                {loadingItems ? "Loading..." : "Load More"}
               </button>
             </div>
           )}
         </div>
       )}
+
       {activeTab === 'reviews' && (
         <div className="reviews-container">
           {reviews.map((rev, index) => (
@@ -363,6 +389,8 @@ const UserPage = () => {
           )}
         </div>
       )}
+
+      {/* DM Modal */}
       {showDMModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -381,8 +409,6 @@ const UserPage = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };

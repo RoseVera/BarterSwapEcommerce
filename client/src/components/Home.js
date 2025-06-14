@@ -8,48 +8,58 @@ import coin from '../assets/coin.png';
 function Home() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    is_bid: "", category: "", condition: "", min_price: "", max_price: ""
-  });
+  const [filters, setFilters] = useState({ is_bid: "", category: "", condition: "", min_price: "", max_price: "" });
   const [appliedFilters, setAppliedFilters] = useState({ ...filters });
-  const [totalPages, setTotalPages] = useState(1);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/items/latest-items")
-      .then(res => res.json())
-      .then(data => setItems(data))
-      .catch(err => console.error("Fetch error:", err));
-  }, []);
+  const fetchItems = async (reset = false) => {
+    if (loading || (!reset && !hasMore)) return;
+    setLoading(true);
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams({
-      page: currentPage,
-      limit: 15,
-      ...appliedFilters
-    });
+    try {
+      const queryParams = new URLSearchParams({
+        limit: 15,
+        ...appliedFilters,
+      });
 
-    fetch(`http://localhost:5000/api/items/filtered-items?${queryParams}`)
-      .then(res => res.json())
-      .then(data => {
+      if (!reset && cursor) queryParams.append("cursor", cursor);
+
+      const res = await fetch(`http://localhost:5000/api/items/filtered-items?${queryParams}`);
+      const data = await res.json();
+
+      if (reset) {
         setItems(data.items);
-        setTotalPages(data.totalPages);
-      })
-      .catch(err => console.error("Fetch error:", err));
-  }, [appliedFilters, currentPage]);
+      } else {
+        setItems(prev => [...prev, ...data.items]);
+      }
 
-  const handleShowResults = () => {
-    setCurrentPage(1); // sayfa başa dönsün
-    setAppliedFilters({ ...filters });
+      setCursor(data.nextCursor);
+      setHasMore(Boolean(data.nextCursor));
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  useEffect(() => {
+    setCursor(null);
+    setHasMore(true);
+    fetchItems(true);
+  }, [appliedFilters]);
+
+  // Show Results 
+  const handleShowResults = () => {
+    setCursor(null);
+    setHasMore(true);
+    setItems([]);
+    setAppliedFilters({ ...filters });
   };
 
   return (
     <div className="home-container">
-      <input className="search-bar" placeholder="Search Users..."  />
       <div className="content-wrapper">
 
         <div className="filter-menu">
@@ -119,7 +129,14 @@ function Home() {
           <button className="show-button" onClick={handleShowResults}>
             Show Results
           </button>
-          <button className="show-button" onClick={() => window.location.reload()}>
+          <button className="show-button" onClick={() => {
+            setFilters({
+              is_bid: "", category: "", condition: "", min_price: "", max_price: ""
+            });
+            setAppliedFilters({
+              is_bid: "", category: "", condition: "", min_price: "", max_price: ""
+            });
+          }}>
             Clean Filters
           </button>
         </div>
@@ -176,31 +193,10 @@ function Home() {
         </div>
 
       </div>
-
-
-      {totalPages > 1 && (
+      {hasMore && (
         <div className="pagination">
-          <button
-            onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            &larr;
-          </button>
-         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-  <button
-    key={page} // ✅ Buraya eklenmeli
-    onClick={() => handlePageChange(page)}
-    className={page === currentPage ? "active-page" : ""}
-  >
-    {page}
-  </button>
-))}
-
-          <button
-            onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            &rarr;
+          <button onClick={() => fetchItems()} disabled={loading}>
+            {loading ? "Loading..." : "Load More"}
           </button>
         </div>
       )}

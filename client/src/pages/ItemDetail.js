@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import profileIcon from '../assets/user.png';
 import '../style/ItemDetail.css';
 import axios from 'axios';
 import noImage from '../assets/no_image.png';
@@ -8,6 +7,7 @@ import coin from '../assets/coin.png';
 import shop from '../assets/shop.png';
 
 import useUserStore from '../components/UserStore';
+import { toast } from 'react-toastify';
 
 function ItemDetail() {
     const { id } = useParams();
@@ -32,15 +32,14 @@ function ItemDetail() {
 
     if (!item) return <div>Loading...</div>;
 
-
     const handleBuy = async () => {
         if (!user) {
-            alert("You must be logged in to purchase.");
+            toast.warning("You must be logged in to purchase.");
             return;
         }
 
         if (user.id === item.User.id) {
-            alert("You cannot purchase your own item.");
+            toast.warning("You cannot purchase your own item.");
             return;
         }
 
@@ -48,39 +47,39 @@ function ItemDetail() {
             const res = await axios.post(
                 `http://localhost:5000/api/items/${item.id}/purchase`,
                 {},
-                { withCredentials: true } // JWT cookie varsa
+                { withCredentials: true }
             );
-            alert(res.data.message); // "Purchase successful"
-            navigate('/'); // veya satın alınanlar sayfası
+            toast.success(res.data.message); // "Purchase successful"
+            navigate('/');
         } catch (err) {
             if (err.response && err.response.data?.message) {
-                alert(err.response.data.message);
+                toast.error(err.response.data.message);
             } else {
-                alert("An error occurred during purchase.");
+                toast.error("An error occurred during purchase.");
             }
         }
     };
 
     const handlePlaceBid = async () => {
         if (!user) {
-            alert("You must be logged in to place a bid.");
+            toast.warning("You must be logged in to place a bid.");
             return;
         }
 
         if (user.id === item.User.id) {
-            alert("You cannot bid on your own item.");
+            toast.warning("You cannot bid on your own item.");
             return;
         }
 
         const numericBid = parseInt(bidAmount, 10);
 
         if (isNaN(numericBid)) {
-            alert("Please enter a valid number.");
+            toast.warning("Please enter a valid number.");
             return;
         }
 
         if (numericBid <= item.current_price) {
-            alert(`Your bid must be greater than the current price (${item.current_price}).`);
+            toast.warning(`Your bid must be greater than the current price (${item.current_price}).`);
             return;
         }
 
@@ -91,15 +90,15 @@ function ItemDetail() {
                 { withCredentials: true }
             );
 
-            alert(res.data.message); // "Bid placed successfully"
-            setItem(prev => ({ ...prev, current_price: numericBid })); // Anında güncelleme
-            setBidAmount(''); // inputu temizle
+            toast.success(res.data.message); // "Bid placed successfully"
+            setItem(prev => ({ ...prev, current_price: numericBid })); // update 
+            setBidAmount(''); // clear input
 
         } catch (err) {
             if (err.response?.data?.message) {
-                alert(`Error: ${err.response.data.message}`);
+                toast.error(`Error: ${err.response.data.message}`);
             } else {
-                alert("An error occurred while placing bid.");
+                toast.error("An error occurred while placing bid.");
             }
         }
     };

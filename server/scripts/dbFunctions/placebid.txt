@@ -1,0 +1,46 @@
+-- FUNCTION: public.place_bid(integer, integer, integer)
+
+-- DROP FUNCTION IF EXISTS public.place_bid(integer, integer, integer);
+
+CREATE OR REPLACE FUNCTION public.place_bid(
+	p_user_id integer,
+	p_item_id integer,
+	p_bid_amount integer)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+    item_price INTEGER;
+BEGIN
+    -- Lock the item row for update to prevent race conditions
+    SELECT items.current_price INTO item_price
+    FROM items
+    WHERE id = p_item_id
+    FOR UPDATE;
+
+    -- Check if bid is higher than current price
+    IF p_bid_amount <= item_price THEN
+        RAISE EXCEPTION 'Bid must be higher than current price. Current: %, Bid: %', item_price, p_bid_amount;
+    END IF;
+
+    -- Insert the new bid
+    INSERT INTO bids (user_id, item_id, bid_amount, "createdAt")
+    VALUES (p_user_id, p_item_id, p_bid_amount, NOW());
+
+    -- Update the item's current price
+    UPDATE items
+    SET current_price = p_bid_amount
+    WHERE id = p_item_id;
+
+    RETURN 'Bid placed successfully';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Error placing bid: %', SQLERRM;
+END;
+$BODY$;
+
+ALTER FUNCTION public.place_bid(integer, integer, integer)
+    OWNER TO postgres;
