@@ -20,15 +20,21 @@ function Login() {
         password
       }, { withCredentials: true });
 
-      const data = res.data; 
+      const data = res.data;
       if (data.user.role == "ADMIN") {
         console.log(data.user.role)
+
+        navigate("/profile");
         toast.success("Login successful!");
-        navigate("/admin");
       } else {
         toast.success("Login successful!");
         navigate("/");
+
       }
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
 
     } catch (err) {
       console.log(err);

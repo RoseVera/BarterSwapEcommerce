@@ -296,7 +296,7 @@ router.get("/user-items", async (req, res) => {
 //for user profile
 router.get("/purchased-items", async (req, res) => {
   const { userId, cursor } = req.query;
-  const limit = 1;
+  const limit = 10;
 
   if (!userId) {
     return res.status(400).json({ message: "User ID is required" });

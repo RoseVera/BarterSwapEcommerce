@@ -164,7 +164,7 @@ function MyItems() {
         }
       } catch (err) {
         console.error("Error deleting item:", err);
-        toast.error("Failed to delete item.");
+        //toast.error("Failed to delete item.");
       }
     }
   };

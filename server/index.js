@@ -3,7 +3,6 @@ const app = express();
 const cors = require("cors");
 const sequelize = require("./sequelize");
 
-
 const authRoutes = require("./routes/auth");
 const itemRoutes = require("./routes/item");
 const bidRoutes = require("./routes/bid");
@@ -22,11 +21,18 @@ const seed = require("./scripts/seed");
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true
-}));
+})); 
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());
-
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    console.log(`🕒 QUERY DURATION: ${req.method} ${req.originalUrl} took ${duration}ms`);
+  });
+  next();
+});
 //ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/items", itemRoutes);
@@ -41,7 +47,7 @@ app.use("/api/admin", adminRoutes);
 require("./models/Associations");
 require("dotenv").config();
 
-
+ 
 
 /*seed()
   .then(() => process.exit(0))

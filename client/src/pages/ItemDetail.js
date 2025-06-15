@@ -82,6 +82,10 @@ function ItemDetail() {
             toast.warning(`Your bid must be greater than the current price (${item.current_price}).`);
             return;
         }
+        if(numericBid>user.balance){
+             toast.warning("Bid amount is higher than your balance.");
+            return;
+        }
 
         try {
             const res = await axios.post(

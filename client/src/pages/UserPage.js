@@ -85,7 +85,7 @@ const UserPage = () => {
       const res = await axios.get(`http://localhost:5000/api/reviews/user/${id}`, {
         params: {
           cursor: reset ? undefined : reviewsCursor,
-          limit: 2,
+          limit:10,
         }
       });
 
@@ -241,7 +241,7 @@ const UserPage = () => {
       {/* USER INFO */}
       {user && (
         <div className="user-header">
-          <h1 className="user-name">{user.name}</h1>
+          <h1 className="user-name">{user.name}{"'s Shop"}</h1>
           <p className="user-reputation"> <img
             src={star}
             alt="star"
