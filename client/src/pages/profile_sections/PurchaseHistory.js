@@ -5,6 +5,7 @@ import useUserStore from "../../components/UserStore";
 import coin from '../../assets/coin.png';
 import whiteStar from '../../assets/whiteStar.png';
 import yellowStar from '../../assets/yellowStar.png';
+import { toast } from "react-toastify";
 
 function PurchaseHistory() {
   const [purchases, setPurchases] = useState([]);
@@ -22,17 +23,17 @@ function PurchaseHistory() {
         params: { userId, cursor }
       });
       const newPurchases = res.data.purchases;
+      console.log(res.data.purchases)
       setPurchases(prev => [...prev, ...newPurchases]);
       const reviewState = {};
       newPurchases.forEach(p => {
-        reviewState[p.id] = {
-          text: p.Review?.review || "",
-          rating: p.Review?.rating || 0,
-          existing: !!p.Review,
+        reviewState[p.transaction_id] = {
+          text: p.review || "",
+          rating: p.rating || 0,
+          existing: !!p.review,
           show: false
         };
-      });
-
+      })
       setReviews(prev => ({ ...prev, ...reviewState }));
       setCursor(res.data.nextCursor);
       setHasMore(!!res.data.nextCursor);
@@ -64,7 +65,7 @@ function PurchaseHistory() {
 
   const submitReview = async (transaction_id) => {
     const { text, rating, existing } = reviews[transaction_id] || {};
-    if (!rating) return alert("Rating is required");
+    if (!rating) return toast.warning("Rating is required");
 
     const url = `http://localhost:5000/api/reviews${existing ? `/${transaction_id}` : ''}`;
     const method = existing ? 'put' : 'post';
@@ -75,7 +76,7 @@ function PurchaseHistory() {
         review: text,
         rating,
       });
-      alert(existing ? "Review updated!" : "Review submitted!");
+      toast.success(existing ? "Review updated!" : "Review submitted!");
       setReviews(prev => ({
         ...prev,
         [transaction_id]: { ...prev[transaction_id], existing: true }
@@ -90,7 +91,7 @@ function PurchaseHistory() {
 
     try {
       await axios.delete(`http://localhost:5000/api/reviews/${transaction_id}`);
-      alert("Review deleted!");
+      toast.success("Review deleted!");
 
       setReviews(prev => ({
         ...prev,
@@ -106,17 +107,15 @@ function PurchaseHistory() {
     }
   };
 
-
-
   return (
     <div className="p-4">
       <div className="item-list">
         {purchases.map(p => (
-          <div key={p.id} className="item-card">
-            <div>{p.Item.title}</div>
+          <div key={p.transaction_id} className="item-card">
+            <div>{p.title}</div>
             <button className="seller-link"
-              onClick={() => navigate(`/user/${p.Seller.id}`)}
-            > Seller {p.Seller.name}</button>
+              onClick={() => navigate(`/user/${p.seller_id}`)}
+            > Seller {p.seller_name}</button>
 
             <div style={{
               position: "absolute",
@@ -129,47 +128,48 @@ function PurchaseHistory() {
               alt="coin"
               style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
             />{p.price}</div>
+      
 
             <button
               onClick={() =>
-                handleReviewChange(p.id, "show", !reviews[p.id]?.show)
+                handleReviewChange(p.transaction_id, "show", !reviews[p.transaction_id]?.show)
               }
               className="modal-button"
             >
-              {p.Review ? "Update Review" : "Make Review"}
+              {p.review ? "Update Review" : "Make Review"}
             </button>
 
-            {reviews[p.id]?.show && (
+            {reviews[p.transaction_id]?.show && (
               <div className="mt-2 space-y-2">
                 <textarea
                   className="w-full border p-2 rounded"
                   maxLength={65535}
                   placeholder="Write your review..."
-                  value={reviews[p.id]?.text || ""}
-                  onChange={(e) => handleReviewChange(p.id, "text", e.target.value)}
+                 value={reviews[p.transaction_id]?.text || ""}
+                  onChange={(e) => handleReviewChange(p.transaction_id, "text", e.target.value)}
                 />
                 <div className="flex items-center">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <img
                       key={n}
-                      src={(reviews[p.id]?.rating || 0) >= n ? yellowStar : whiteStar}
+                      src={(reviews[p.transaction_id]?.rating || 0) >= n ? yellowStar : whiteStar}
                       alt="star"
-                      onClick={() => handleStarClick(p.id, n)}
+                      onClick={() => handleStarClick(p.transaction_id, n)}
                       style={{ width: "34px", height: "34px", cursor: "pointer", marginRight: "4px" }}
                     />
                   ))}
-                  <span style={{ marginLeft: "8px" }}>{reviews[p.id]?.rating || 0}/5</span>
+                  <span style={{ marginLeft: "8px" }}>{reviews[p.transaction_id]?.rating || 0}/5</span>
                 </div>
 
                 <button
-                  onClick={() => submitReview(p.id)}
+                  onClick={() => submitReview(p.transaction_id)}
                   className="modal-button"
                 >
                   Save Review
                 </button>
-                {reviews[p.id]?.existing && (
+                {p.review && (
                   <button
-                    onClick={() => deleteReview(p.id)}
+                    onClick={() => deleteReview(p.transaction_id)}
                     className="modal-button bg-red-500 hover:bg-red-600 text-white"
                   >
                     Delete Review

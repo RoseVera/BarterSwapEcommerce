@@ -5,8 +5,6 @@ import logo from '../assets/logov4.png';
 import profileIcon from '../assets/user.png';
 import awningIcon from '../assets/awning3.png';
 import coin from '../assets/coin.png';
-
-
 import useUserStore from '../components/UserStore';
 
 function Header() {

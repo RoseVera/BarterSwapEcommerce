@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../db");
-const User = require("../models/User");  
+const User = require("../models/User");
 
 router.get('/:id', async (req, res) => {
   const userId = req.params.id;
@@ -27,10 +26,15 @@ router.put("/update/:id", async (req, res) => {
   const { name, student_id, phone } = req.body;
 
   try {
-    await pool.query(
-      `UPDATE users SET name = $1, student_id = $2, phone = $3 WHERE id = $4`,
-      [name, student_id, phone, id]
+    const [updated] = await User.update(
+      { name, student_id, phone },
+      { where: { id } }
     );
+
+    if (updated === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
     res.json({ message: "User information updated successfully." });
   } catch (err) {
     console.error("Update failed:", err);

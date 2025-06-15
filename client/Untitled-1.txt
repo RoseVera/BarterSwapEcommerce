@@ -1,0 +1,560 @@
+// models/User.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const User = sequelize.define("User", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+        len: [1, 50], 
+    }
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+        isEmail: true
+      }
+  },
+  student_id: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  reputation: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.ENUM("USER", "ADMIN"),
+    allowNull: false,
+    defaultValue: "USER"
+  },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [9, 20]  
+    }
+  },
+  birthday: {
+    type: DataTypes.DATEONLY,
+    allowNull: false,
+  },
+  balance: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  is_deleted: {
+  type: DataTypes.BOOLEAN,
+  allowNull: false,
+  defaultValue: false,
+}
+
+}, {
+  tableName: "users",
+  timestamps: false,
+  indexes: [
+    {
+      name: "users_email_key",
+      unique: true,
+      fields: ["email"],
+    },
+     {
+        name: "idx_users_role_deleted_id",
+        fields: ["role", "is_deleted", "id"],
+      },
+  ]
+});
+
+module.exports = User; const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Follower = sequelize.define("Follower", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  follower_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  followed_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+}, {
+  tableName: "followers",
+  timestamps: true,      
+  updatedAt: false,
+  indexes: [
+    {
+      name: "followers_follower_id_followed_id_key",
+      unique: true,
+      fields: ["follower_id", "followed_id"],
+    },
+    {
+      name: "idx_followed_id",
+      fields: ["followed_id"],
+    },
+    {
+      name: "idx_follower_created_at",
+      fields: [
+        "follower_id",
+        { attribute: "createdAt", order: "DESC" },
+      ],
+    },
+  ]
+});
+
+module.exports = Follower;
+ const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Conversation = sequelize.define("Conversation", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  participant_one_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  participant_two_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+}, {
+  tableName: "conversations",
+  timestamps: true, // createdAt and updatedAt 
+ indexes: [
+    {
+      name: "idx_conversations_user1_updated_at",
+      fields: [
+        "participant_one_id",
+        { attribute: "updatedAt", order: "DESC" } 
+      ],
+    },
+    {
+      name: "idx_conversations_user2_updated_at",
+      fields: [
+        "participant_two_id",
+        { attribute: "updatedAt", order: "DESC" }
+      ],
+    }
+  ]
+});
+
+module.exports = Conversation; const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const DirectMessage = sequelize.define("DirectMessage", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  sender_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  receiver_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  content: {
+    type: DataTypes.TEXT,
+  }, 
+  conversation_id: {
+  type: DataTypes.INTEGER,
+  allowNull: false,
+}
+
+}, {
+  tableName: "direct_messages",
+  timestamps: true,      
+  updatedAt: false,
+  indexes: [
+  {
+    name: "idx_dm_conversation_created_at_asc",
+    fields: [
+      "conversation_id",
+      { attribute: "createdAt", order: "ASC" }
+    ]
+  }
+]
+});
+
+module.exports = DirectMessage;
+ const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Bonus = sequelize.define("Bonus", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  amount: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  type: {
+    type: DataTypes.ENUM("BONUS", "REWARD"),
+    allowNull: false,
+  },
+}, {
+  tableName: "bonuses",
+  timestamps: true,
+  updatedAt: false,
+
+  indexes: [
+    {
+      name: "idx_bonuses_user_id_createdAt",
+      fields: [
+        { attribute: "user_id" },
+        { attribute: "createdAt", order: "ASC" }
+      ]
+    },
+    {
+      name: "idx_bonus_type_createdat_id",
+      fields: [{attribute: "type"}, { attribute: "createdAt", order: "ASC" }, { attribute: "id", order: "DESC" }],
+    }
+  ]
+});
+
+Bonus.associate = (models) => {
+  Bonus.belongsTo(models.User, { foreignKey: "user_id" });
+};
+
+module.exports = Bonus; const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Item = sequelize.define("Item", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  title: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.STRING(500),
+  },
+  category: {
+    type: DataTypes.ENUM(
+      'BOOK', 'CLOTHING', 'SHOES', 'TEXTILE', 'STATIONERY',
+      'ELECTRONICS', 'TOYS', 'SPORT', 'BEAUTY', 'ART', 'MUSIC',
+      'FURNITURE', 'JEWELRY', 'HEALTH', 'OTHER'
+    ),
+    allowNull: false,
+  },
+  starting_price: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  current_price: {
+    type: DataTypes.INTEGER,
+  },
+  image: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+
+  },
+  condition: {
+    type: DataTypes.ENUM("NEW", "LIKE NEW", "GOOD", "ACCEPTABLE", "BAD"),
+    allowNull: false,
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  is_bid: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+}, {
+  tableName: "items",
+  timestamps: true,
+  updatedAt: false,
+  indexes: [ //PostgreSQL, bir bileşik index’in en başındaki sütunlar varsa, bu index’i hala kullanabilir:
+    {
+      name: "idx_items_user_id_is_active_is_bid",
+      fields: ["user_id", "is_active", "is_bid"],
+    },
+    {
+      name: "idx_items_active_id",
+      fields: ["is_active", "id"]
+    },
+    {
+      name: "idx_items_isbids",
+      fields: ["is_bid"],
+    },
+    {
+      name: "idx_items_category",
+      fields: ["category"],
+    },
+    {
+      name: "idx_items_condition",
+      fields: ["condition"],
+    },
+    {
+      name: "idx_items_price",
+      fields: ["starting_price"],
+    },
+    {
+      name: "idx_items_createdat",
+      fields: [{ attribute: "createdAt", order: "DESC" }],
+    },
+    {
+      name: "idx_items_active_condition",
+      fields: ["is_active", "condition"]
+    },
+    {
+      name: "idx_items_active_category",
+      fields: ["is_active", "category"]
+    }
+  ],
+});
+
+module.exports = Item; const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Bid = sequelize.define("Bid", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  item_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  bid_amount: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+}, {
+  tableName: "bids",
+  timestamps: true,      
+  updatedAt: false,
+  indexes: [
+    {
+      name: "idx_bids_itemid_bidamount_desc",
+      fields: ["item_id", { attribute: "bid_amount", order: "DESC" }],
+    }
+  ]
+});
+
+module.exports = Bid; const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Transaction = sequelize.define("Transaction", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  buyer_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  seller_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  item_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  price: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+
+}, {
+  tableName: "transactions",
+  timestamps: true,
+  updatedAt: false,
+  indexes: [
+    {
+      name: "idx_transactions_buyer_id",
+      fields: ["buyer_id"],
+    },
+    {
+      name: "idx_transaction_buyer_id_created_at",
+      fields: ["buyer_id", { attribute: "createdAt", order: "DESC" }],
+    },
+    {
+      name: 'idx_transactions_seller_id',
+      fields: ["seller_id"]
+    },
+    {
+      name: 'idx_transactions_created_at',
+      fields: ["createdAt"]
+    },
+     {
+    name: "idx_transaction_createdat_id",
+    fields: [{ attribute: "createdAt", order: "ASC" }, { attribute: "id", order: "DESC" }],
+  }
+  ]
+});
+
+module.exports = Transaction;
+ const { DataTypes } = require("sequelize");
+const sequelize = require("../sequelize");
+
+const Review = sequelize.define("Review", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  transaction_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  review: {
+    type: DataTypes.TEXT,
+  },
+  rating: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+}, {
+  tableName: "reviews",
+  timestamps: true,      
+  updatedAt: false,
+  indexes: [
+    {
+      name: "idx_review_transaction_id",
+      fields: ["transaction_id"],
+    },
+    {
+      name: "idx_reviews_transaction_createdat",
+      fields: ["transaction_id", { attribute: "createdAt", order: "DESC" }],
+    }
+  ]  
+});
+
+module.exports = Review;
+ const User = require("./User");
+const Item = require("./Item");
+const Bid = require("./Bid");
+const Transaction = require("./Transaction");
+const Review = require("./Review");
+const Bonus = require("./Bonus");
+const DirectMessage = require("./DirectMessage");
+const Follower = require("./Follower");
+const Conversation = require("./Conversation");
+
+// USER - ITEM (1:N)
+User.hasMany(Item, { foreignKey: "user_id" });
+Item.belongsTo(User, { foreignKey: "user_id" });
+
+// USER - BID (1:N)
+User.hasMany(Bid, { foreignKey: "user_id" });
+Bid.belongsTo(User, { foreignKey: "user_id" });
+
+// ITEM - BID (1:N)
+Item.hasMany(Bid, { foreignKey: "item_id" });
+Bid.belongsTo(Item, { foreignKey: "item_id" });
+
+// USER (buyer) - TRANSACTION (1:N)
+User.hasMany(Transaction, { foreignKey: "buyer_id", as: "Purchases" });
+Transaction.belongsTo(User, { foreignKey: "buyer_id", as: "Buyer" });
+
+// USER (seller) - TRANSACTION (1:N)
+User.hasMany(Transaction, { foreignKey: "seller_id", as: "Sales" });
+Transaction.belongsTo(User, { foreignKey: "seller_id", as: "Seller" });
+
+// ITEM - TRANSACTION (1:1)
+Item.hasOne(Transaction, { foreignKey: "item_id" });
+Transaction.belongsTo(Item, { foreignKey: "item_id" });
+
+// TRANSACTION - REVIEW (1:1)
+Transaction.hasOne(Review, { foreignKey: "transaction_id" });
+Review.belongsTo(Transaction, { foreignKey: "transaction_id" });
+
+// USER - BONUS (1:N)
+User.hasMany(Bonus, { foreignKey: "user_id" });
+Bonus.belongsTo(User, { foreignKey: "user_id" });
+
+// USER - DIRECTMESSAGE (1:N) as Sender
+User.hasMany(DirectMessage, { foreignKey: "sender_id", as: "SentMessages" });
+DirectMessage.belongsTo(User, { foreignKey: "sender_id", as: "Sender" });
+
+// USER - DIRECTMESSAGE (1:N) as Receiver
+User.hasMany(DirectMessage, { foreignKey: "receiver_id", as: "ReceivedMessages" });
+DirectMessage.belongsTo(User, { foreignKey: "receiver_id", as: "Receiver" });
+
+// DIRECT MESSAGE - CONVERSATION
+Conversation.hasMany(DirectMessage, { foreignKey: "conversation_id" });
+DirectMessage.belongsTo(Conversation, { foreignKey: "conversation_id" });
+
+// USER - CONVERSATION Associations
+User.hasMany(Conversation, { foreignKey: "participant_one_id", as: "ConversationsAsOne" });
+User.hasMany(Conversation, { foreignKey: "participant_two_id", as: "ConversationsAsTwo" });
+
+Conversation.belongsTo(User, { foreignKey: "participant_one_id", as: "ParticipantOne" });
+Conversation.belongsTo(User, { foreignKey: "participant_two_id", as: "ParticipantTwo" });
+
+// USER - FOLLOWERS (M:N with self-reference)
+User.belongsToMany(User, {
+  through: Follower,
+  as: "Followers",           
+  foreignKey: "followed_id",
+  otherKey: "follower_id"
+});
+
+User.belongsToMany(User, {
+  through: Follower,
+  as: "Following",           
+  foreignKey: "follower_id",
+  otherKey: "followed_id"
+});
+
+// FOLLOWER -> FOLLOWED USER (N:1)
+Follower.belongsTo(User, { foreignKey: 'followed_id', as: 'followed' });
+
+
+Bonus.belongsTo(User, { foreignKey: "user_id"});
+
+module.exports = {
+  User,
+  Item,
+  Bid,
+  Transaction,
+  Review,
+  Bonus,
+  DirectMessage,
+  Follower,
+  Conversation
+};
+ 

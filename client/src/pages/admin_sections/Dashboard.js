@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Line } from "react-chartjs-2";
 import 'chart.js/auto';
-import useUserStore from "../../components/UserStore";
 import "../../style/Stats.css";
 
 function Dashboard() {
-  const { user } = useUserStore();
   const [topBidItems, setTopBidItems] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);

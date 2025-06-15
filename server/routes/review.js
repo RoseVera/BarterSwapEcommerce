@@ -1,12 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Op } = require("sequelize");
 const Review = require("../models/Review");
-const Transaction = require("../models/Transaction");
-const Item = require("../models/Item");
-const User = require("../models/User");
-const Bonus = require("../models/Bonus");
-
 const pool = require("../db");
 
 router.get("/reputation/:id", async (req, res) => {
@@ -26,77 +20,73 @@ router.get("/reputation/:id", async (req, res) => {
   }
 });
 
-// GET /api/reviews/user/:userId
 router.get("/user/:userId", async (req, res) => {
   const { userId } = req.params;
   const { cursor, limit = 10 } = req.query;
 
   try {
-    let where = {
-      seller_id: userId,
-    };
-
+    let values = [userId];
+    let cursorCondition = "";
+    
     if (cursor) {
       const [createdAtCursor, idCursor] = cursor.split("_");
-      where = {
-        ...where,
-        [Op.or]: [
-          { createdAt: { [Op.lt]: new Date(createdAtCursor) } },
-          {
-            createdAt: new Date(createdAtCursor),
-            id: { [Op.lt]: idCursor },
-          },
-        ],
-      };
-    }
-    const transactions = await Transaction.findAll({
-      where,
-      include: [
-        {
-          model: Review,
-          required: true,
-        },
-        {
-          model: Item,
-          attributes: ["title"]
-        },
-        {
-          model: User,
-          as: "Buyer",
-          attributes: ["name"]
-        }
-      ],
-      order: [
-        ["createdAt", "DESC"],
-        ["id", "DESC"],
-      ],
-      limit: +limit
-    });
+      values.push(createdAtCursor, idCursor);
 
-const data = transactions.map(tx => ({
-  transactionCreatedAt: tx.createdAt,
-  transactionId: tx.id,
-  id: tx.Review.id,
-  itemTitle: tx.Item?.title || "Unknown Item",
-  buyerName: tx.Buyer?.name || "Unknown Buyer",
-  review: tx.Review.review,
-  rating: tx.Review.rating,
-  createdAt: tx.Review.createdAt,
-}));
+      cursorCondition = `
+        AND (
+          t."createdAt" < $2 OR
+          (t."createdAt" = $2 AND t.id < $3)
+        )
+      `;
+    }
+
+    const query = `
+      SELECT
+        t.id AS "transactionId",
+        t."createdAt" AS "transactionCreatedAt",
+        r.id AS "reviewId",
+        r.review,
+        r.rating,
+        r."createdAt" AS "reviewCreatedAt",
+        i.title AS "itemTitle",
+        u.name AS "buyerName"
+      FROM transactions t
+      JOIN reviews r ON t.id = r.transaction_id
+      LEFT JOIN items i ON t.item_id = i.id
+      LEFT JOIN users u ON t.buyer_id = u.id
+      WHERE t.seller_id = $1
+      ${cursorCondition}
+      ORDER BY t."createdAt" DESC, t.id DESC
+      LIMIT ${+limit}
+    `;
+
+    const result = await pool.query(query, values);
+
+    const data = result.rows.map(row => ({
+      transactionCreatedAt: row.transactionCreatedAt,
+      transactionId: row.transactionId,
+      id: row.reviewId,
+      itemTitle: row.itemTitle || "Unknown Item",
+      buyerName: row.buyerName || "Unknown Buyer",
+      review: row.review,
+      rating: row.rating,
+      createdAt: row.reviewCreatedAt
+    }));
 
     res.json({
       reviews: data,
-     nextCursor: data.length > 0 ? `${data[data.length - 1].transactionCreatedAt.toISOString()}_${data[data.length - 1].transactionId}` : null
-
+      nextCursor:
+        data.length > 0
+          ? `${data[data.length - 1].transactionCreatedAt.toISOString()}_${data[data.length - 1].transactionId}`
+          : null
     });
-    
+
   } catch (err) {
-    console.error("Review fetch error:", err);
+    console.error("Review fetch error (raw):", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// routes/reviews.js
 router.get("/:transactionId", async (req, res) => {
   const { transactionId } = req.params;
   try {
@@ -132,13 +122,15 @@ router.post("/", async (req, res) => {
   }
 });
 
-
 router.put("/:transactionId", async (req, res) => {
   const { transactionId } = req.params;
   const { review, rating } = req.body;
 
   try {
-    const existing = await Review.findOne({ where: { transaction_id: transactionId } });
+    const existing = await Review.findOne({ 
+      where: { transaction_id: transactionId },
+     attributes: ["id", "transaction_id", "review", "rating", "createdAt"]
+     });
     if (!existing) return res.status(404).json({ message: "Review not found" });
 
     await existing.update({ review, rating });
@@ -149,12 +141,14 @@ router.put("/:transactionId", async (req, res) => {
   }
 });
 
-// DELETE /api/reviews/:transactionId
 router.delete("/:transactionId", async (req, res) => {
   const { transactionId } = req.params;
 
   try {
-    const review = await Review.findOne({ where: { transaction_id: transactionId } });
+    const review = await Review.findOne({
+      where: { transaction_id: transactionId },
+      attributes: ["id", "transaction_id", "review", "rating", "createdAt"]
+ });
     if (!review) {
       return res.status(404).json({ message: "Review not found" });
     }
@@ -166,6 +160,5 @@ router.delete("/:transactionId", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 module.exports = router;

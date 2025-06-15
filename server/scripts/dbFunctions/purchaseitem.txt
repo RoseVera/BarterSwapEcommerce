@@ -1,0 +1,60 @@
+-- FUNCTION: public.purchase_item(integer, integer)
+
+-- DROP FUNCTION IF EXISTS public.purchase_item(integer, integer);
+
+CREATE OR REPLACE FUNCTION public.purchase_item(
+	buyer_id integer,
+	item_id integer)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+  seller_id INT;
+  price INT;
+  starting_price INT;
+  current_price INT;
+BEGIN
+  -- Get info
+  SELECT i.user_id, i.current_price, i.starting_price 
+    INTO seller_id, current_price, starting_price
+  FROM items i
+  WHERE i.id = item_id FOR UPDATE;
+  
+  -- Fiyat belirle
+  IF current_price IS NOT NULL THEN
+    price := current_price;
+  ELSE
+    price := starting_price;
+  END IF;
+
+  -- Balance control
+  IF (SELECT balance FROM users WHERE id = buyer_id) < price THEN
+    RAISE EXCEPTION 'Buyer balance is insufficient';
+  END IF;
+
+  -- Transaction init
+  PERFORM pg_advisory_xact_lock(1); -- protects from concurrent transactions
+
+  -- Transaction insert
+  INSERT INTO transactions (buyer_id, seller_id, item_id, price, "createdAt")
+  VALUES (buyer_id, seller_id, item_id, price, NOW());
+
+  UPDATE users SET balance = balance - price WHERE id = buyer_id;   -- Buyer balance update
+  UPDATE users SET balance = balance + price WHERE id = seller_id;   -- Seller balance update
+
+  -- Mark item as sold
+  UPDATE items SET is_active = false WHERE id =  item_id;
+
+  RETURN 'Purchase successful';
+  
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'Transaction failed: %', SQLERRM;
+    RAISE;
+END;
+$BODY$;
+
+ALTER FUNCTION public.purchase_item(integer, integer)
+    OWNER TO postgres;

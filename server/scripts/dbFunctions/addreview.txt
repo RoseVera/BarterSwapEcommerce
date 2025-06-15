@@ -1,0 +1,48 @@
+-- FUNCTION: public.add_review(integer, text, integer)
+
+-- DROP FUNCTION IF EXISTS public.add_review(integer, text, integer);
+
+CREATE OR REPLACE FUNCTION public.add_review(
+	p_transaction_id integer,
+	p_review text,
+	p_rating integer)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+    v_buyer_id INTEGER;
+    v_review_count INTEGER;
+BEGIN
+    -- Find Buyer ID
+    SELECT buyer_id INTO v_buyer_id
+    FROM transactions
+    WHERE id = p_transaction_id;
+
+    -- Add Review
+    INSERT INTO reviews (transaction_id, review, rating, "createdAt")
+    VALUES (p_transaction_id, p_review, p_rating, NOW());
+
+    -- Find total reviews
+    SELECT COUNT(*) INTO v_review_count
+    FROM reviews r
+    JOIN transactions t ON r.transaction_id = t.id
+    WHERE t.buyer_id = v_buyer_id;
+
+    
+    IF v_review_count % 5 = 0 THEN
+        -- increase balance
+        UPDATE users
+        SET balance = balance + 30
+        WHERE id = v_buyer_id;
+
+        -- Add Bonus
+        INSERT INTO bonuses (user_id, amount, type, "createdAt")
+        VALUES (v_buyer_id, 30, 'REWARD', NOW());
+    END IF;
+END;
+$BODY$;
+
+ALTER FUNCTION public.add_review(integer, text, integer)
+    OWNER TO postgres;

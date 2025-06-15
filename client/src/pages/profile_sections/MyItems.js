@@ -4,17 +4,20 @@ import useUserStore from "../../components/UserStore";
 import axios from "axios";
 import auctionIcon from "../../assets/auction.png"; // ikon yolunu doğru ver
 import coin from '../../assets/coin.png';
+import { toast } from "react-toastify";
 
 function MyItems() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdateModalOpen, setUpdateIsModalOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { user } = useUserStore();
-  const navigate = useNavigate();
   const toggleModal = () => setIsModalOpen(!isModalOpen);
+  const toggleUpdateModal = () => setUpdateIsModalOpen(!isUpdateModalOpen);
+
   const cleanForm = () => {
     setFormData({
       title: "",
@@ -27,7 +30,7 @@ function MyItems() {
     });
     setIsModalOpen(true);
   };
-  const toggleUpdateModal = () => setUpdateIsModalOpen(!isUpdateModalOpen);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -37,6 +40,7 @@ function MyItems() {
     image: "",
     is_bid: false,
   });
+
   const openUpdateModal = (item) => {
     setFormData({
       id: item.id,
@@ -51,29 +55,40 @@ function MyItems() {
     setUpdateIsModalOpen(true);
   };
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        let url = `http://localhost:5000/api/items/myItems?user_id=${user.id}`;
-        if (filter === "bid") {
-          url += "&is_bid=true";
-        } else if (filter === "non-bid") {
-          url += "&is_bid=false";
-        }
+  const fetchItems = async (reset = false) => {
+    if (loading || (!reset && !hasMore)) return;
+    setLoading(true);
 
-        const response = await axios.get(url);
+    try {
+      let url = `http://localhost:5000/api/items/myItems?user_id=${user.id}&limit=10`;
+      if (filter === "bid") url += "&is_bid=true";
+      else if (filter === "non-bid") url += "&is_bid=false";
+      if (!reset && cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
 
-        setItems(response.data);
-        setCurrentPage(1); // filtre değiştiğinde 1. sayfaya dön
-      } catch (err) {
-        console.error("Item fetch error:", err);
+      const res = await axios.get(url);
+
+      if (reset) {
+        setItems(res.data.items);
+      } else {
+        setItems(prev => [...prev, ...res.data.items]);
       }
-    };
 
-    if (user?.id) {
-      fetchItems();
+      setCursor(res.data.nextCursor);
+      setHasMore(res.data.hasMore);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
     }
-  }, [filter, user.id]);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      setCursor(null);
+      setHasMore(true);
+      fetchItems(true);
+    }
+  }, [filter, user?.id]);
 
   // Update Form Data
   const handleChange = (e) => {
@@ -93,11 +108,11 @@ function MyItems() {
       });
 
       if (response.status === 201) {
-        alert("Item created successfully!");
+        toast.success("Item created successfully!");
         //toggleModal();
       }
     } catch (err) {
-      alert("Error creating item");
+      toast.error("Error creating item");
       console.error(err);
     }
   };
@@ -123,13 +138,13 @@ function MyItems() {
       );
 
       if (response.status === 200) {
-        alert("Item updated successfully!");
+        toast.success("Item updated successfully!");
         //setUpdateIsModalOpen(false);
-        const refreshed = await axios.get(`http://localhost:5000/api/items?user_id=${user.id}`);
-        setItems(refreshed.data);
+        //const refreshed = await axios.get(`http://localhost:5000/api/items?user_id=${user.id}`);
+        //setItems(refreshed.data);
       }
     } catch (err) {
-      alert("Error updating item");
+      toast.error("Error updating item");
       console.error(err);
     }
   };
@@ -141,7 +156,7 @@ function MyItems() {
       try {
         const response = await axios.delete(`http://localhost:5000/api/items/${formData.id}`);
         if (response.status === 200) {
-          alert("Item deleted successfully.");
+          toast.success("Item deleted successfully.");
           // Refresh items list
           const refreshed = await axios.get(`http://localhost:5000/api/items?user_id=${user.id}`);
           setItems(refreshed.data);
@@ -149,7 +164,7 @@ function MyItems() {
         }
       } catch (err) {
         console.error("Error deleting item:", err);
-        alert("Failed to delete item.");
+        //toast.error("Failed to delete item.");
       }
     }
   };
@@ -158,22 +173,15 @@ function MyItems() {
   const handleSell = async (itemId) => {
     try {
       const response = await axios.post(`http://localhost:5000/api/bids/sell/${itemId}`);
-      alert(response.data.message);
+      toast.success(response.data.message);
 
       // Satış sonrası listeyi yenile
-      const refreshed = await axios.get(`http://localhost:5000/api/items?user_id=${user.id}`);
-      setItems(refreshed.data);
+      //const refreshed = await axios.get(`http://localhost:5000/api/items?user_id=${user.id}`);
+      //setItems(refreshed.data);
     } catch (err) {
-      alert(err.response?.data?.error || "Error processing sale");
+      toast.error(err.response?.data?.error || "Error processing sale");
     }
   };
-
-
-  const paginatedItems = items.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-  const totalPages = Math.ceil(items.length / itemsPerPage);
 
   return (
     <div className="item-page">
@@ -192,10 +200,10 @@ function MyItems() {
 
       {/*ITEM LIST */}
       <div className="item-list">
-        {paginatedItems.length === 0 ? (
+        {items.length === 0 ? (
           <p>No items found.</p>
         ) : (
-          paginatedItems.map((item) => (
+          items.map((item) => (
             <div key={item.id} className="item-card" style={{ position: "relative" }}>
               <button
                 onClick={() => openUpdateModal(item)}
@@ -265,14 +273,14 @@ function MyItems() {
               ) : (
                 <>
                   <p>
-                        Price:{" "}
-                        <img
-                          src={coin}
-                          alt="coin"
-                          style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
-                        />
-                        {item.starting_price}
-                      </p>
+                    Price:{" "}
+                    <img
+                      src={coin}
+                      alt="coin"
+                      style={{ width: "20px", verticalAlign: "middle", marginRight: "5px", marginBottom: "4px" }}
+                    />
+                    {item.starting_price}
+                  </p>
 
                 </>
               )}
@@ -281,44 +289,12 @@ function MyItems() {
         )}
       </div>
 
-      {/*PAGING */}
-      {totalPages > 1 && (
+
+      {/* Load More */}
+      {hasMore && (
         <div className="pagination">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            &larr;
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-            // Sayfa numarası kısaltma (örn: ... 5 6 7 ... şeklinde)
-            if (
-              page === 1 ||
-              page === totalPages ||
-              (page >= currentPage - 1 && page <= currentPage + 1)
-            ) {
-              return (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={page === currentPage ? "active-page" : ""}
-                >
-                  {page}
-                </button>
-              );
-            } else if (
-              page === currentPage - 2 ||
-              page === currentPage + 2
-            ) {
-              return <span key={page}>...</span>;
-            }
-            return null;
-          })}
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            &rarr;
+          <button className="modal-button"onClick={() => fetchItems()} disabled={loading}>
+            {loading ? "Loading..." : "Load More"}
           </button>
         </div>
       )}

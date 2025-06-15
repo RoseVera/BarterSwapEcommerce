@@ -35,3 +35,16 @@
     border-radius: 6px;
     cursor: pointer;
   }
+  .load-button {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    background-color: #C599B6;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  

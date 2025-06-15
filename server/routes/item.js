@@ -1,24 +1,20 @@
 const express = require("express");
 const Item = require("../models/Item");
 const User = require("../models/User");
-const Transaction = require("../models/Transaction");
-const Review = require("../models/Review");
-
 const { ensureAuth } = require('../middleware/auth');
 const sequelize = require('../sequelize');
 const router = express.Router();
-const { Op } = require("sequelize");
+const { QueryTypes } = require("sequelize");
+const pool = require("../db");
 
 router.post("/", async (req, res) => {
   const { user_id, title, description, category, starting_price, image, condition, is_bid } = req.body;
-
-  // Verilerin doğruluğunu kontrol et
   if (!user_id || !title || !category || !starting_price || !condition) {
+
     return res.status(400).json({ message: "All required fields must be filled" });
   }
 
   try {
-    // Yeni item'ı oluştur
     const newItem = await Item.create({
       user_id,
       title,
@@ -46,47 +42,33 @@ router.post('/:id/purchase', ensureAuth, async (req, res) => {
   const itemId = req.params.id;
 
   try {
-    const item = await Item.findByPk(itemId, {
-      include: { model: User, attributes: ['id'] }
+    const item = await Item.findOne({
+      where: { id: itemId },
+      attributes: ['user_id', 'is_bid']
     });
 
     if (!item) return res.status(404).json({ message: 'Item not found' });
-    if (item.User.id === buyerId) {
+    if (item.user_id === buyerId) {
       return res.status(400).json({ message: "You can't purchase your own item" });
     }
     if (item.is_bid) {
       return res.status(400).json({ message: "This item is for bidding only" });
     }
 
-    // Buyer info
-    const buyer = await User.findByPk(buyerId);
-
-    if (!buyer) {
-      return res.status(404).json({ message: 'Buyer not found' });
-    }
-
-    // Get price
-    const price = item.current_price ?? item.starting_price;
-
-    // Balance Control
-    if (buyer.balance < price) {
-      return res.status(400).json({ message: 'Insufficient balance' });
-    }
-
-    // Purchase Function
+    // Satın alma işlemini fonksiyonla yap
     const result = await sequelize.query(
-      'SELECT purchase_item(:buyer_id, :item_id)',
+      'SELECT purchase_item(:buyer_id, :item_id) AS result',
       {
         replacements: { buyer_id: buyerId, item_id: itemId },
         type: sequelize.QueryTypes.SELECT
       }
     );
 
-    res.json({ message: result[0].purchase_item });
+    res.json({ message: result[0].result });
 
   } catch (err) {
     console.error('Purchase error:', err);
-    if (err.message.includes('Insufficient balance')) {
+    if (err.message.includes('Buyer balance is insufficient')) {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
     res.status(500).json({ message: 'Internal server error' });
@@ -104,17 +86,15 @@ router.post('/:id/bid', ensureAuth, async (req, res) => {
 
   try {
     // Get item and its owner
-    const item = await Item.findByPk(itemId, {
-      include: { model: User, attributes: ['id'] }
+     const item = await Item.findOne({
+      where: { id: itemId },
+      attributes: ['is_bid']
     });
 
     if (!item) return res.status(404).json({ message: 'Item not found' });
-
     if (!item.is_bid) {
       return res.status(400).json({ message: "This item is not open for bidding" });
     }
-
-
 
     // Call the Postgres function
     const result = await sequelize.query(
@@ -142,52 +122,59 @@ router.post('/:id/bid', ensureAuth, async (req, res) => {
   }
 });
 
+// for user profile
 router.get("/myItems", async (req, res) => {
-  const { user_id, is_bid } = req.query;
+  const { user_id, is_bid, cursor, limit = 10 } = req.query;
 
   if (!user_id) {
     return res.status(400).json({ message: "Missing user_id" });
   }
 
-  const whereClause = {
-    user_id,
-    is_active: true,
-  };
+  const replacements = { user_id, limit: parseInt(limit) };
+  let whereClause = `WHERE i.user_id = :user_id AND i.is_active = true`;
 
   if (is_bid === "true") {
-    whereClause.is_bid = true;
+    whereClause += ` AND i.is_bid = true`;
   } else if (is_bid === "false") {
-    whereClause.is_bid = false;
+    whereClause += ` AND i.is_bid = false`;
   }
 
-  try {
-    const items = await Item.findAll({ where: whereClause });
-    res.json(items);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+  if (cursor) {
+    whereClause += ` AND i."createdAt" < :cursor`;
+    replacements.cursor = cursor;
   }
-});
 
-router.get("/latest-items", async (req, res) => {
+  const sql = `
+    SELECT i.*
+    FROM items i
+    ${whereClause}
+    ORDER BY i."createdAt" DESC
+    LIMIT :limit
+  `;
+
   try {
-    const items = await Item.findAll({
-      where: {
-        is_active: true
-      },
-      order: [['createdAt', 'DESC']],
-      limit: 15
+    const items = await sequelize.query(sql, {
+      replacements,
+      type: sequelize.QueryTypes.SELECT,
     });
-    res.json(items);
+
+    const nextCursor = items.length > 0 ? items[items.length - 1].createdAt : null;
+
+    res.json({
+      items,
+      nextCursor,
+      hasMore: items.length === parseInt(limit),
+    });
   } catch (err) {
-    console.error("Error fetching latest items:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Cursor pagination fetch error:", err);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
+//for homepage
 router.get("/filtered-items", async (req, res) => {
   const {
-    page = 1,
+    cursor,
     limit = 15,
     is_bid,
     category,
@@ -196,151 +183,176 @@ router.get("/filtered-items", async (req, res) => {
     max_price
   } = req.query;
 
-  const offset = (page - 1) * limit;
-  const whereClause = {
-    is_active: true,
-  };
-
-  // Filtre
-  if (is_bid === "true") whereClause.is_bid = true;
-  else if (is_bid === "false") whereClause.is_bid = false;
-
-  if (category) whereClause.category = category;
-  if (condition) whereClause.condition = condition;
-
-  if (min_price || max_price) {
-    whereClause.current_price = {};
-    if (min_price) whereClause.current_price[Op.gte] = parseInt(min_price);
-    if (max_price) whereClause.current_price[Op.lte] = parseInt(max_price);
+  const values = [];
+  let whereClauses = [`is_active = true`];
+  if (is_bid === "true") {
+    whereClauses.push(`is_bid = true`);
+  } else if (is_bid === "false") {
+    whereClauses.push(`is_bid = false`);
   }
 
+  if (category) {
+    values.push(category);
+    whereClauses.push(`category = $${values.length}`);
+  }
+
+  if (condition) {
+    values.push(condition);
+    whereClauses.push(`condition = $${values.length}`);
+  }
+
+  if (min_price) {
+    values.push(parseInt(min_price));
+    whereClauses.push(`starting_price >= $${values.length}`);
+  }
+
+  if (max_price) {
+    values.push(parseInt(max_price));
+    whereClauses.push(`starting_price <= $${values.length}`);
+  }
+
+  if (cursor) {
+    const [createdAtCursor, idCursor] = cursor.split("_");
+    values.push(createdAtCursor);
+    values.push(idCursor);
+    whereClauses.push(`("createdAt" < $${values.length - 1} OR ("createdAt" = $${values.length - 1} AND id < $${values.length}))`);
+  }
+
+  values.push(parseInt(limit));
+
+  const sql = `
+    SELECT *
+    FROM items
+    WHERE ${whereClauses.join(" AND ")}
+    ORDER BY "createdAt" DESC, id DESC
+    LIMIT $${values.length}
+  `;
+
   try {
-    const { rows, count } = await Item.findAndCountAll({
-      where: whereClause,
-      order: [['createdAt', 'DESC']], // newest to oldest
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+    const items = await sequelize.query(sql, {
+      bind: values,
+      type: QueryTypes.SELECT
     });
 
+    const nextCursor = items.length > 0
+      ? `${items[items.length - 1].createdAt.toISOString()}_${items[items.length - 1].id}`
+      : null;
     res.json({
-      items: rows,
-      total: count,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page),
+      items,
+      nextCursor
     });
   } catch (err) {
-    console.error("Filtered fetch error:", err);
+    console.error("Raw SQL filtered-items error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
+// for user page
 router.get("/user-items", async (req, res) => {
-  const {
-    userId,
-    page = 1,
-    limit = 15
-  } = req.query;
-
-  if (!userId) {
-    return res.status(400).json({ message: "User ID is required" });
-  }
-
-  const offset = (page - 1) * limit;
+  const { userId, cursor } = req.query;
+  const limit = 12;
 
   try {
-    const { rows, count } = await Item.findAndCountAll({
-      where: {
-        user_id: userId,
-        is_active: true
-      },
-      order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
+    let values = [userId];
+    let cursorCondition = "";
 
-    res.json({
-      items: rows,
-      total: count,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page)
-    });
+    if (cursor) {
+      const [createdAtCursor, idCursor] = cursor.split("_");
+      values.push(createdAtCursor, idCursor);
+
+      cursorCondition = `
+        AND (
+          i."createdAt" < $2 OR
+          (i."createdAt" = $2 AND i.id < $3)
+        )
+      `;
+    }
+
+    // LIMIT ifadesi query string'e doğrudan yazıldığı için değer kontrolü yapılıyor
+    const query = `
+      SELECT i.*
+      FROM items i
+      WHERE i.user_id = $1 AND i.is_active = true
+      ${cursorCondition}
+      ORDER BY i."createdAt" DESC, i.id DESC
+      LIMIT ${+limit}
+    `;
+
+    const result = await pool.query(query, values);
+    const items = result.rows;
+
+    const lastItem = items[items.length - 1];
+    const nextCursor = items.length === limit
+      ? `${new Date(lastItem.createdAt).toISOString()}_${lastItem.id}`
+      : null;
+
+    res.json({ items, nextCursor });
   } catch (err) {
-    console.error('User items fetch error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error("User items fetch error (raw):", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
+//for user profile
 router.get("/purchased-items", async (req, res) => {
   const { userId, cursor } = req.query;
   const limit = 10;
-  //CREATE INDEX idx_transaction_buyer_id_created_at ON public.transactions USING btree (buyer_id, "createdAt" DESC)
-  //CREATE INDEX idx_review_transaction_id ON reviews (transaction_id);
+
   if (!userId) {
     return res.status(400).json({ message: "User ID is required" });
   }
 
+  let values = [userId];
+  let whereClause = `t.buyer_id = $1`;
+
+  if (cursor) {
+    const [cursorDate, cursorId] = cursor.split("_");
+    values.push(cursorDate);
+    values.push(cursorId);
+    whereClause += ` AND (t."createdAt" < $2 OR (t."createdAt" = $2 AND t.id < $3))`;
+  }
+
+  values.push(limit);
+
+  const sql = `
+    SELECT
+      t.id AS transaction_id,
+      t."createdAt",
+      i.id AS item_id,
+      i.title,
+      i.is_bid,
+      s.id AS seller_id,
+      s.name AS seller_name,
+      r.review,
+      r.rating,
+      t.price
+    FROM transactions t
+    JOIN items i ON i.id = t.item_id
+    JOIN users s ON s.id = t.seller_id
+    LEFT JOIN reviews r ON r.transaction_id = t.id
+    WHERE ${whereClause}
+    ORDER BY t."createdAt" DESC, t.id DESC
+    LIMIT $${values.length}
+  `;
+
   try {
-    const where = {
-      buyer_id: userId
-    };
-
-    if (cursor) {
-      const [cursorDate, cursorId] = cursor.split("_");
-      where[Op.or] = [
-        {
-          createdAt: { [Op.lt]: cursorDate }
-        },
-        {
-          createdAt: cursorDate,
-          id: { [Op.lt]: cursorId }
-        }
-      ];
-    }
-
-    const purchases = await Transaction.findAll({
-      where,
-      include: [
-        {
-          model: Item,
-          attributes: ["id", "title", "is_bid"]
-        },
-        {
-          model: User,
-          as: "Seller",
-          attributes: ["id", "name"]
-        },
-        {
-          model: Review,
-          attributes: ["review", "rating"]
-        }
-      ],
-      order: [
-        ["createdAt", "DESC"],
-        ["id", "DESC"]
-      ],
-      limit
+    const purchases = await sequelize.query(sql, {
+      bind: values,
+      type: QueryTypes.SELECT
     });
 
     const nextCursor = purchases.length === limit
-      ? `${purchases[purchases.length - 1].createdAt.toISOString()}_${purchases[purchases.length - 1].id}`
+      ? `${purchases[purchases.length - 1].createdAt.toISOString()}_${purchases[purchases.length - 1].transaction_id}`
       : null;
-
-    console.log("Returned Purchases:");
-    purchases.forEach((p, index) => {
-      console.log(`[${index + 1}] id: ${p.id}, createdAt: ${p.createdAt.toISOString()}`);
-    });
-    console.log("Next Cursor:", nextCursor);
 
     res.json({
       purchases,
       nextCursor
     });
-
   } catch (err) {
-    console.error("Cursor pagination fetch error:", err);
+    console.error("Raw SQL purchased-items error:", err);
     res.status(500).json({ message: "Server error" });
   }
-
 });
 
 router.get('/:id', async (req, res) => {
@@ -365,8 +377,6 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
-module.exports = router;
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
